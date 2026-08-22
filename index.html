@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6C3CEB" />
+  <title>英文學習 App</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC",
+                   "Microsoft JhengHei", sans-serif;
+      background: #f7f5ff;
+      color: #25213b;
+    }
+    button { font: inherit; }
+    .app {
+      width: min(100%, 760px);
+      min-height: 100vh;
+      margin: 0 auto;
+      background: #f7f5ff;
+    }
+    header {
+      padding: 28px 22px 16px;
+      background: linear-gradient(135deg, #eee9ff, #faf9ff);
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .menu, .settings {
+      border: 0;
+      background: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(60, 40, 120, .10);
+      cursor: pointer;
+    }
+    h1 { margin: 0; font-size: 32px; }
+    .tagline { margin: 8px 0 0; font-size: 17px; color: #666078; }
+    main { padding: 18px 18px 90px; }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 10px 4px 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .card {
+      border: 0;
+      text-align: left;
+      padding: 20px;
+      min-height: 190px;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 6px 20px rgba(60, 40, 120, .10);
+      cursor: pointer;
+      transition: transform .15s ease;
+    }
+    .card:active { transform: scale(.98); }
+    .icon { font-size: 38px; margin-bottom: 12px; }
+    .card h2 { margin: 0 0 7px; font-size: 22px; }
+    .card p { margin: 0; color: #716b80; line-height: 1.45; }
+    .purple { background: #f0ebff; }
+    .orange { background: #fff2dc; }
+    .green { background: #eaf9f1; }
+    .blue { background: #eaf3ff; }
+    .progress {
+      margin-top: 18px;
+      background: white;
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 6px 20px rgba(60, 40, 120, .08);
+    }
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .bar {
+      height: 10px;
+      background: #ece8f5;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar > div {
+      width: 20%;
+      height: 100%;
+      background: #6c3ceb;
+      border-radius: 99px;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .back {
+      border: 0;
+      background: transparent;
+      font-size: 17px;
+      padding: 0 0 16px;
+      cursor: pointer;
+    }
+    .lesson {
+      background: white;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 6px 20px rgba(60, 40, 120, .08);
+    }
+    .counter { color: #6c3ceb; font-weight: 800; }
+    .zh { font-size: 23px; margin-top: 24px; }
+    .en { font-size: 26px; font-weight: 800; margin: 10px 0 20px; }
+    .actions { display: grid; gap: 10px; }
+    .primary, .secondary {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .primary { background: #6c3ceb; color: white; }
+    .secondary { background: #eee9ff; color: #5630c7; }
+    .tip {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #fff7df;
+      color: #685a30;
+      line-height: 1.5;
+    }
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(100%, 760px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: rgba(255,255,255,.96);
+      border-top: 1px solid #ece9f3;
+      padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+      z-index: 10;
+    }
+    nav button {
+      border: 0;
+      background: transparent;
+      color: #777184;
+      padding: 7px 2px;
+      cursor: pointer;
+    }
+    nav button.active { color: #6c3ceb; font-weight: 800; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+      background: #29233d;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 99px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      z-index: 20;
+    }
+    .toast.show { opacity: 1; }
+    @media (max-width: 430px) {
+      h1 { font-size: 28px; }
+      .grid { gap: 10px; }
+      .card { padding: 16px; min-height: 170px; }
+      .card h2 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <section id="home" class="page active">
+    <header>
+      <div class="top">
+        <button class="menu" onclick="showToast('選單功能之後再加入')">☰</button>
+        <button class="settings" onclick="showToast('設定功能之後再加入')">⚙️</button>
+      </div>
+      <h1>Good evening! 🌙</h1>
+      <p class="tagline">每天 5 分鐘，從不敢說，到敢開口！</p>
+    </header>
+
+    <main>
+      <div class="section-title">今天想學什麼？</div>
+      <div class="grid">
+        <button class="card purple" onclick="openLesson('今日英文')">
+          <div class="icon">📅</div>
+          <h2>今日英文</h2>
+          <p>每天 5 句實用英文<br>天天進步一點點</p>
+        </button>
+
+        <button class="card orange" onclick="openLesson('餐廳')">
+          <div class="icon">🍽️</div>
+          <h2>餐廳</h2>
+          <p>點餐、訂位、結帳<br>餐廳常用英文</p>
+        </button>
+
+        <button class="card green" onclick="openLesson('購物')">
+          <div class="icon">🛍️</div>
+          <h2>購物</h2>
+          <p>問價格、尺寸、顏色<br>購物必備英文</p>
+        </button>
+
+        <button class="card blue" onclick="openLesson('機場')">
+          <div class="icon">✈️</div>
+          <h2>機場</h2>
+          <p>報到、行李、登機<br>機場實用英文</p>
+        </button>
+      </div>
+
+      <div class="progress">
+        <div class="progress-row">
+          <strong>🔥 連續學習</strong>
+          <strong>1 天</strong>
+        </div>
+        <div class="bar"><div></div></div>
+        <p style="color:#777184;margin-bottom:0;">今天完成 1 / 5 句</p>
+      </div>
+    </main>
+  </section>
+
+  <section id="lesson" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter" id="lessonTitle">今日英文</span> · <span id="counter">1 / 5</span></div>
+        <div class="zh" id="zh">請問有位子嗎？</div>
+        <div class="en" id="en">Do you have a table?</div>
+
+        <div class="actions">
+          <button class="secondary" onclick="speakEnglish()">🔊 聽一次</button>
+          <button class="secondary" onclick="practiceSpeaking()">🎤 跟著說</button>
+          <button class="primary" onclick="nextLesson()">下一句 ▶</button>
+        </div>
+
+        <div class="tip">
+          💡 <strong>小提示</strong><br>
+          不用害怕說錯。先敢開口，再慢慢進步！
+        </div>
+
+        <div class="tip" style="background:#eef8ff;">
+          <strong>🎤 語音練習</strong>
+          <div id="speechResult" style="margin-top:8px;">按「跟著說」開始練習。</div>
+          <div id="speechFeedback" style="margin-top:6px;"></div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <nav>
+    <button class="active" onclick="goHome()">🏠<br>首頁</button>
+    <button onclick="showToast('我的課程功能下一版加入')">📖<br>我的課程</button>
+    <button onclick="showToast('學習記錄功能下一版加入')">📊<br>學習記錄</button>
+    <button onclick="showToast('個人設定下一版加入')">👤<br>我的</button>
+  </nav>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const lessons = {
+    "今日英文": [
+      ["請問有位子嗎？", "Do you have a table?"],
+      ["我們兩位。", "For two people."],
+      ["可以給我菜單嗎？", "May I have the menu?"],
+      ["請問這是什麼？", "What is this?"],
+      ["結帳，謝謝。", "Check, please."]
+    ],
+    "餐廳": [
+      ["我們一共有七位。", "There are seven of us."],
+      ["請問有位子嗎？", "Do you have a table?"],
+      ["要等多久？", "How long is the wait?"],
+      ["我們可以等。", "We can wait."],
+      ["我們想要一張七人的桌子。", "We'd like a table for seven."]
+    ],
+    "購物": [
+      ["這個多少錢？", "How much is this?"],
+      ["有其他尺寸嗎？", "Do you have another size?"],
+      ["可以試穿嗎？", "Can I try this on?"],
+      ["有其他顏色嗎？", "Do you have other colors?"],
+      ["我買這個。", "I'll take this."]
+    ],
+    "機場": [
+      ["我要辦理登機。", "I'd like to check in."],
+      ["這是我的護照。", "Here's my passport."],
+      ["我的行李在哪裡？", "Where is my luggage?"],
+      ["登機門在哪裡？", "Where is the gate?"],
+      ["謝謝你的幫忙。", "Thank you for your help."]
+    ]
+  };
+
+  let currentCategory = "今日英文";
+  let currentIndex = 0;
+
+  function openLesson(category) {
+    currentCategory = category;
+    currentIndex = 0;
+    updateLesson();
+    document.getElementById("home").classList.remove("active");
+    document.getElementById("lesson").classList.add("active");
+    window.scrollTo(0,0);
+  }
+
+  function updateLesson() {
+    const item = lessons[currentCategory][currentIndex];
+    document.getElementById("lessonTitle").textContent = currentCategory;
+    document.getElementById("counter").textContent =
+      `${currentIndex + 1} / ${lessons[currentCategory].length}`;
+    document.getElementById("zh").textContent = item[0];
+    document.getElementById("en").textContent = item[1];
+  }
+
+  function nextLesson() {
+    if (currentIndex < lessons[currentCategory].length - 1) {
+      currentIndex++;
+      updateLesson();
+    } else {
+      showToast("🎉 太棒了！這一課完成！");
+      setTimeout(goHome, 1000);
+    }
+  }
+
+  function goHome() {
+    document.getElementById("lesson").classList.remove("active");
+    document.getElementById("home").classList.add("active");
+    window.scrollTo(0,0);
+  }
+
+  function speakEnglish() {
+    const text = document.getElementById("en").textContent;
+    if ("speechSynthesis" in window) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      u.rate = 0.85;
+      speechSynthesis.speak(u);
+    } else {
+      showToast("你的瀏覽器目前不支援英文語音播放");
+    }
+  }
+
+  let recognition = null;
+
+  function practiceSpeaking() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      showToast("目前瀏覽器不支援語音辨識，請用 Chrome 試試看");
+      return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    showToast("🎤 請開始說英文……");
+
+    recognition.onresult = function(event) {
+      const heard = event.results[0][0].transcript.trim();
+      const target = document.getElementById("en").textContent.trim();
+      const normalizedHeard = heard.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\\s+/g, " ");
+      const normalizedTarget = target.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\\s+/g, " ");
+
+      document.getElementById("speechResult").textContent = `你說：「${heard}」`;
+
+      if (normalizedHeard === normalizedTarget) {
+        document.getElementById("speechFeedback").textContent = "🟢 太棒了！說得很完整！";
+      } else {
+        document.getElementById("speechFeedback").textContent =
+          `🟡 很接近！目標句子是：「${target}」`;
+      }
+    };
+
+    recognition.onerror = function() {
+      showToast("沒有聽清楚，再試一次！");
+    };
+
+    recognition.start();
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+  }
+</script>
+</body>
+</html>
