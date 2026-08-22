@@ -174,6 +174,64 @@
       .card { padding: 16px; min-height: 170px; }
       .card h2 { font-size: 20px; }
     }
+
+    .stats-grid {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px;
+    }
+    .stat {
+      background:white; border-radius:18px; padding:14px 10px; text-align:center;
+      box-shadow:0 5px 16px rgba(60,40,120,.07);
+    }
+    .stat strong { display:block; font-size:22px; margin-bottom:3px; }
+    .stat span { color:#777184; font-size:13px; }
+    .choice-grid { display:grid; gap:10px; margin-top:18px; }
+    .choice {
+      border:2px solid #ece8f5; background:white; border-radius:16px; padding:15px;
+      text-align:left; cursor:pointer; font-weight:700;
+    }
+    .choice.correct { border-color:#48a868; background:#effaf2; }
+    .choice.wrong { border-color:#e0a23a; background:#fff8e8; }
+    .choice:disabled { cursor:default; }
+    .quiz-type {
+      display:flex; gap:8px; overflow:auto; margin:12px 0 16px; padding-bottom:2px;
+    }
+    .quiz-type button {
+      white-space:nowrap; border:0; border-radius:999px; padding:10px 14px;
+      background:#eee9ff; color:#5630c7; cursor:pointer; font-weight:700;
+    }
+    .quiz-type button.active { background:#6c3ceb; color:white; }
+    .flashcard {
+      min-height:210px; display:flex; flex-direction:column; justify-content:center;
+      align-items:center; text-align:center; background:white; border-radius:24px;
+      padding:25px; box-shadow:0 6px 20px rgba(60,40,120,.08); cursor:pointer;
+    }
+    .flashcard .small { color:#777184; font-size:14px; margin-bottom:12px; }
+    .flashcard .big { font-size:28px; font-weight:800; }
+    .word-bank {
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
+    }
+    .word {
+      border:0; background:#eee9ff; color:#5630c7; border-radius:12px; padding:10px 12px;
+      cursor:pointer; font-weight:700;
+    }
+    .record-list { display:grid; gap:10px; margin-top:14px; }
+    .record {
+      background:white; border-radius:17px; padding:15px; box-shadow:0 5px 16px rgba(60,40,120,.06);
+    }
+    .record .en { font-size:18px; margin:5px 0; }
+    .pill { display:inline-block; padding:5px 9px; border-radius:999px; font-size:12px; font-weight:800; }
+    .pill.green { background:#e8f7ee; color:#237a44; }
+    .pill.orange { background:#fff1d8; color:#8a5a11; }
+    .settings-row {
+      background:white; border-radius:18px; padding:16px; margin-top:10px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .switch { width:52px; height:30px; border:0; border-radius:99px; background:#ccc; cursor:pointer; position:relative; }
+    .switch.on { background:#6c3ceb; }
+    .switch:after { content:""; width:24px; height:24px; border-radius:50%; background:white; position:absolute; top:3px; left:3px; transition:.2s; }
+    .switch.on:after { left:25px; }
+    @media (max-width:430px) { .stats-grid{gap:7px}.stat{padding:12px 6px}.stat strong{font-size:19px} }
+
   </style>
 </head>
 <body>
@@ -216,13 +274,45 @@
         </button>
       </div>
 
+
+      <div class="section-title" style="margin-top:22px;">更多練習</div>
+      <div class="grid">
+        <button class="card purple" onclick="openQuiz('choice')">
+          <div class="icon">📝</div>
+          <h2>選擇題</h2>
+          <p>測試你是否真的懂了</p>
+        </button>
+        <button class="card blue" onclick="openQuiz('listening')">
+          <div class="icon">🎧</div>
+          <h2>聽力練習</h2>
+          <p>聽英文，選出正確意思</p>
+        </button>
+        <button class="card green" onclick="openQuiz('fill')">
+          <div class="icon">✍️</div>
+          <h2>填空練習</h2>
+          <p>把英文句子拼完整</p>
+        </button>
+        <button class="card orange" onclick="openReview()">
+          <div class="icon">🔁</div>
+          <h2>錯題複習</h2>
+          <p>專門練習還不熟的句子</p>
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat"><strong id="homeLearned">0</strong><span>已學會</span></div>
+        <div class="stat"><strong id="homeReview">0</strong><span>待複習</span></div>
+        <div class="stat"><strong id="homeAccuracy">0%</strong><span>正確率</span></div>
+      </div>
+
       <div class="progress">
         <div class="progress-row">
           <strong>🔥 連續學習</strong>
-          <strong>1 天</strong>
+          <strong id="homeStreak">1 天</strong>
         </div>
-        <div class="bar"><div></div></div>
+        <div class="bar"><div id="homeBar" style="width:0%;"></div></div>
         <p id="homeProgressText" style="color:#777184;margin-bottom:0;">今天完成 0 / 5 句</p>
+        <p style="color:#777184;margin:7px 0 0;">累積學會 <strong id="homeLearned">0</strong> 句</p>
       </div>
     </main>
   </section>
@@ -262,11 +352,107 @@
     </main>
   </section>
 
+
+  <section id="result" class="page">
+    <main>
+      <div class="lesson" style="text-align:center;">
+        <div style="font-size:56px;">🎉</div>
+        <h2 style="font-size:28px;margin:8px 0;">今天完成了！</h2>
+        <p style="color:#716b80;">你已經完成今天的英文練習</p>
+
+        <div class="grid" style="margin-top:20px;">
+          <div class="card purple" style="min-height:120px;text-align:center;">
+            <div style="font-size:30px;">🟢</div>
+            <h2 id="resultCorrect">0</h2>
+            <p>答對</p>
+          </div>
+          <div class="card orange" style="min-height:120px;text-align:center;">
+            <div style="font-size:30px;">🔁</div>
+            <h2 id="resultReview">0</h2>
+            <p>需要複習</p>
+          </div>
+        </div>
+
+        <div class="progress" style="margin-top:16px;text-align:left;">
+          <div class="progress-row">
+            <strong>🔥 連續學習</strong>
+            <strong id="streakValue">1 天</strong>
+          </div>
+          <p style="margin:8px 0 0;color:#716b80;">累積學會 <strong id="learnedValue">0</strong> 句</p>
+        </div>
+
+        <button class="primary" style="width:100%;margin-top:18px;" onclick="goHome()">
+          回首頁
+        </button>
+      </div>
+    </main>
+  </section>
+
+
+  <section id="quiz" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter" id="quizTitle">選擇題</span> · <span id="quizCounter">1 / 5</span></div>
+        <div class="zh" id="quizQuestion">題目</div>
+        <div id="quizArea"></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="review" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <h2 style="margin-top:0;">🔁 錯題複習</h2>
+        <p style="color:#716b80;">這裡會集中顯示你還不熟的句子。</p>
+        <div id="reviewList" class="record-list"></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="stats" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <h2 style="margin-top:0;">📊 學習記錄</h2>
+        <div class="stats-grid">
+          <div class="stat"><strong id="statsLearned">0</strong><span>已學會</span></div>
+          <div class="stat"><strong id="statsReview">0</strong><span>待複習</span></div>
+          <div class="stat"><strong id="statsAccuracy">0%</strong><span>正確率</span></div>
+        </div>
+        <div class="progress" style="margin-top:14px;">
+          <div class="progress-row"><strong>題庫完成度</strong><strong id="statsCompletion">0%</strong></div>
+          <div class="bar"><div id="statsBar" style="width:0%;"></div></div>
+        </div>
+        <div class="record-list" id="statsRecords"></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="settingsPage" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <h2 style="margin-top:0;">⚙️ 設定</h2>
+        <div class="settings-row">
+          <div><strong>🔊 答題音效</strong><br><small style="color:#777184;">答對／答錯播放提示音</small></div>
+          <button id="soundSwitch" class="switch on" onclick="toggleSound()"></button>
+        </div>
+        <div class="settings-row">
+          <div><strong>🔊 英文自動朗讀</strong><br><small style="color:#777184;">進入題目時自動播放英文</small></div>
+          <button id="autoSpeakSwitch" class="switch" onclick="toggleAutoSpeak()"></button>
+        </div>
+        <button class="secondary" style="width:100%;margin-top:14px;" onclick="resetProgress()">重設學習紀錄</button>
+      </div>
+    </main>
+  </section>
+
   <nav>
     <button class="active" onclick="goHome()">🏠<br>首頁</button>
-    <button onclick="showToast('我的課程功能下一版加入')">📖<br>我的課程</button>
-    <button onclick="showToast('學習記錄功能下一版加入')">📊<br>學習記錄</button>
-    <button onclick="showToast('個人設定下一版加入')">👤<br>我的</button>
+    <button onclick="openQuiz('flashcard')">📖<br>學習</button>
+    <button onclick="openStats()">📊<br>記錄</button>
+    <button onclick="openSettings()">⚙️<br>設定</button>
   </nav>
 </div>
 
@@ -501,11 +687,25 @@
   function updateLearningStatus() {
     const progress = loadProgress();
     const today = progress.daily[todayKey()] || [];
+    const total = today.length || 5;
     const learnedToday = today.filter(id => progress.learned.includes(id)).length;
+    const percent = Math.round((learnedToday / total) * 100);
+
     const status = document.getElementById("learningStatus");
-    if (status) status.textContent = `今天 ${learnedToday} / ${today.length || 5} 句完成`;
+    if (status) status.textContent = `今天 ${learnedToday} / ${total} 句完成`;
+
     const homeProgress = document.getElementById("homeProgressText");
-    if (homeProgress) homeProgress.textContent = `今天完成 ${learnedToday} / ${today.length || 5} 句`;
+    if (homeProgress) homeProgress.textContent = `今天完成 ${learnedToday} / ${total} 句`;
+
+    const homeBar = document.getElementById("homeBar");
+    if (homeBar) homeBar.style.width = percent + "%";
+
+    const homeStreak = document.getElementById("homeStreak");
+    if (homeStreak) homeStreak.textContent = calculateStreak() + " 天";
+
+    const homeLearned = document.getElementById("homeLearned");
+    if (homeLearned) homeLearned.textContent = progress.learned.length;
+    updateHomeStats();
   }
 
   function openLesson(category) {
@@ -540,9 +740,11 @@
     document.getElementById("en").textContent = q.en;
     document.getElementById("speechResult").textContent = "按「跟著說」開始練習。";
     document.getElementById("speechFeedback").textContent = "";
+    if (autoSpeakEnabled) setTimeout(speakEnglish, 200);
   }
 
   function playResultSound(isCorrect) {
+    if (!soundEnabled) return;
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
@@ -587,7 +789,12 @@
   function markCurrent(isCorrect) {
     playResultSound(isCorrect);
     if (currentCategory === "今日英文") {
+      const p = loadProgress();
+      p.attempts = (p.attempts || 0) + 1;
+      if (isCorrect) p.correctAnswers = (p.correctAnswers || 0) + 1;
+      saveProgress(p);
       recordResult(currentQuestions[currentIndex], isCorrect);
+      updateHomeStats();
     }
     showToast(isCorrect ? "🟢 已記錄：學會了！" : "🟡 已記錄：明天再複習！");
   }
@@ -596,17 +803,348 @@
     if (currentIndex < currentQuestions.length - 1) {
       currentIndex++;
       updateLesson();
+    } else if (currentCategory === "今日英文") {
+      showResultPage();
     } else {
-      showToast("🎉 今天的 5 句完成！");
+      showToast("🎉 這個情境完成！");
       setTimeout(goHome, 900);
     }
   }
 
+  function showResultPage() {
+    const progress = loadProgress();
+    const ids = progress.daily[todayKey()] || [];
+    const correct = ids.filter(id => progress.learned.includes(id)).length;
+    const review = ids.filter(id => progress.failed.includes(id)).length;
+
+    document.getElementById("resultCorrect").textContent = correct;
+    document.getElementById("resultReview").textContent = review;
+    document.getElementById("learnedValue").textContent = progress.learned.length;
+    document.getElementById("streakValue").textContent = calculateStreak() + " 天";
+
+    document.getElementById("lesson").classList.remove("active");
+    document.getElementById("home").classList.remove("active");
+    document.getElementById("result").classList.add("active");
+    updateLearningStatus();
+    window.scrollTo(0,0);
+  }
+
+  function calculateStreak() {
+    const progress = loadProgress();
+    const days = Object.keys(progress.daily || {}).sort().reverse();
+    if (!days.length) return 0;
+
+    let streak = 0;
+    let cursor = new Date();
+
+    for (const key of days) {
+      const expected = cursor.getFullYear() + "-" +
+        String(cursor.getMonth() + 1).padStart(2, "0") + "-" +
+        String(cursor.getDate()).padStart(2, "0");
+
+      if (key !== expected) break;
+
+      const ids = progress.daily[key] || [];
+      const done = ids.filter(id => progress.learned.includes(id)).length;
+
+      if (done === 0) break;
+
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return streak;
+  }
+
   function goHome() {
     document.getElementById("lesson").classList.remove("active");
+    document.getElementById("result").classList.remove("active");
     document.getElementById("home").classList.add("active");
     updateLearningStatus();
     window.scrollTo(0,0);
+  }
+
+
+  let quizMode = "choice";
+  let quizQuestions = [];
+  let quizIndex = 0;
+  let quizCorrect = 0;
+  let quizAnswered = false;
+  let flashRevealed = false;
+  let soundEnabled = true;
+  let autoSpeakEnabled = false;
+
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem("englishLearningSettingsV1")) || {}; }
+    catch(e) { return {}; }
+  }
+  function saveSettings(s) { localStorage.setItem("englishLearningSettingsV1", JSON.stringify(s)); }
+
+  function updateHomeStats() {
+    const p = loadProgress();
+    const pool = allQuestions();
+    const learned = p.learned.length;
+    const review = p.failed.length;
+    const attempts = p.attempts || 0;
+    const correct = p.correctAnswers || 0;
+    const accuracy = attempts ? Math.round(correct / attempts * 100) : 0;
+    const el = id => document.getElementById(id);
+    if (el("homeLearned")) el("homeLearned").textContent = learned;
+    if (el("homeReview")) el("homeReview").textContent = review;
+    if (el("homeAccuracy")) el("homeAccuracy").textContent = accuracy + "%";
+    if (el("statsLearned")) el("statsLearned").textContent = learned;
+    if (el("statsReview")) el("statsReview").textContent = review;
+    if (el("statsAccuracy")) el("statsAccuracy").textContent = accuracy + "%";
+    if (el("statsCompletion")) el("statsCompletion").textContent = Math.round(learned / pool.length * 100) + "%";
+    if (el("statsBar")) el("statsBar").style.width = Math.round(learned / pool.length * 100) + "%";
+  }
+
+  function recordQuizAnswer(question, isCorrect) {
+    const p = loadProgress();
+    p.attempts = (p.attempts || 0) + 1;
+    if (isCorrect) p.correctAnswers = (p.correctAnswers || 0) + 1;
+    recordResult(question, isCorrect);
+    saveProgress(p);
+    updateHomeStats();
+  }
+
+  function openQuiz(mode) {
+    quizMode = mode;
+    quizQuestions = getDailyQuestions();
+    quizIndex = 0;
+    quizCorrect = 0;
+    quizAnswered = false;
+    flashRevealed = false;
+
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("quiz").classList.add("active");
+    renderQuiz();
+    window.scrollTo(0,0);
+  }
+
+  function makeChoices(question) {
+    const pool = shuffle(allQuestions().filter(q => q.id !== question.id));
+    const choices = shuffle([question, ...pool.slice(0,3)]);
+    return choices;
+  }
+
+  function renderQuiz() {
+    const q = quizQuestions[quizIndex];
+    document.getElementById("quizTitle").textContent =
+      quizMode === "choice" ? "選擇題" :
+      quizMode === "listening" ? "聽力練習" :
+      quizMode === "fill" ? "填空練習" : "單字卡";
+    document.getElementById("quizCounter").textContent = `${quizIndex + 1} / ${quizQuestions.length}`;
+    document.getElementById("quizQuestion").textContent =
+      quizMode === "listening" ? "🔊 聽完英文後，選出正確中文意思" : q.zh;
+
+    const area = document.getElementById("quizArea");
+
+    if (quizMode === "choice") {
+      area.innerHTML = '<div class="choice-grid"></div>';
+      const box = area.querySelector(".choice-grid");
+      makeChoices(q).forEach(choice => {
+        const b = document.createElement("button");
+        b.className = "choice";
+        b.textContent = choice.en;
+        b.onclick = () => answerChoice(b, choice.id === q.id, q);
+        box.appendChild(b);
+      });
+    } else if (quizMode === "listening") {
+      area.innerHTML = `
+        <button class="primary" style="width:100%;" onclick="speakQuizText()">🔊 再聽一次</button>
+        <div class="choice-grid" id="listeningChoices"></div>`;
+      const box = document.getElementById("listeningChoices");
+      makeChoices(q).forEach(choice => {
+        const b = document.createElement("button");
+        b.className = "choice";
+        b.textContent = choice.zh;
+        b.onclick = () => answerChoice(b, choice.id === q.id, q);
+        box.appendChild(b);
+      });
+      setTimeout(speakQuizText, 250);
+    } else if (quizMode === "fill") {
+      const words = shuffle(q.en.replace(/[?.!,']/g,"").split(" "));
+      area.innerHTML = `
+        <div class="flashcard" style="min-height:120px;">
+          <div class="small">把下面的單字排成完整句子</div>
+          <div class="big" id="fillAnswer" style="font-size:22px;"></div>
+        </div>
+        <div class="word-bank" id="wordBank"></div>
+        <button class="primary" style="width:100%;margin-top:14px;" onclick="checkFill()">檢查答案</button>`;
+      const bank = document.getElementById("wordBank");
+      words.forEach((word, i) => {
+        const b = document.createElement("button");
+        b.className = "word";
+        b.textContent = word;
+        b.onclick = () => {
+          const out = document.getElementById("fillAnswer");
+          out.textContent += (out.textContent ? " " : "") + word;
+          b.disabled = true;
+          b.style.opacity = ".45";
+        };
+        bank.appendChild(b);
+      });
+    } else {
+      area.innerHTML = `
+        <div class="flashcard" onclick="revealFlashcard()">
+          <div class="small">點一下翻卡</div>
+          <div class="big" id="flashText">${q.zh}</div>
+          <div style="margin-top:14px;color:#777184;" id="flashHint">點一下看英文</div>
+        </div>
+        <div class="actions" style="margin-top:14px;">
+          <button class="secondary" onclick="speakQuizText()">🔊 聽英文</button>
+          <button class="primary" onclick="flashResult(true)">✅ 我會了</button>
+          <button class="secondary" onclick="flashResult(false)">🔁 再複習</button>
+        </div>`;
+    }
+  }
+
+  function answerChoice(button, correct, q) {
+    if (quizAnswered) return;
+    quizAnswered = true;
+    document.querySelectorAll("#quizArea .choice").forEach(b => b.disabled = true);
+    button.classList.add(correct ? "correct" : "wrong");
+    if (correct) quizCorrect++;
+    recordQuizAnswer(q, correct);
+    playResultSound(correct);
+    setTimeout(nextQuizQuestion, 700);
+  }
+
+  function checkFill() {
+    if (quizAnswered) return;
+    const q = quizQuestions[quizIndex];
+    const typed = document.getElementById("fillAnswer").textContent.trim().toLowerCase().replace(/[?.!,']/g,"");
+    const target = q.en.trim().toLowerCase().replace(/[?.!,']/g,"");
+    const correct = typed === target;
+    quizAnswered = true;
+    quizCorrect += correct ? 1 : 0;
+    recordQuizAnswer(q, correct);
+    playResultSound(correct);
+    showToast(correct ? "🟢 完全正確！" : "🟡 再多練習一次！");
+    setTimeout(nextQuizQuestion, 800);
+  }
+
+  function speakQuizText() {
+    const q = quizQuestions[quizIndex];
+    if (!q || !("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(q.en);
+    u.lang = "en-US"; u.rate = .82;
+    speechSynthesis.speak(u);
+  }
+
+  function revealFlashcard() {
+    if (flashRevealed) return;
+    flashRevealed = true;
+    document.getElementById("flashText").textContent = quizQuestions[quizIndex].en;
+    document.getElementById("flashHint").textContent = "再點一下也可以播放英文";
+    speakQuizText();
+  }
+
+  function flashResult(correct) {
+    if (quizAnswered) return;
+    quizAnswered = true;
+    if (correct) quizCorrect++;
+    recordQuizAnswer(quizQuestions[quizIndex], correct);
+    playResultSound(correct);
+    setTimeout(nextQuizQuestion, 500);
+  }
+
+  function nextQuizQuestion() {
+    if (quizIndex < quizQuestions.length - 1) {
+      quizIndex++;
+      quizAnswered = false;
+      flashRevealed = false;
+      renderQuiz();
+    } else {
+      showToast(`🎉 完成！這次答對 ${quizCorrect} / ${quizQuestions.length} 題`);
+      setTimeout(goHome, 900);
+    }
+  }
+
+  function openReview() {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("review").classList.add("active");
+    const p = loadProgress();
+    const pool = allQuestions();
+    const list = document.getElementById("reviewList");
+    const qs = p.failed.map(id => pool.find(q => q.id === id)).filter(Boolean);
+
+    if (!qs.length) {
+      list.innerHTML = '<div class="tip">🎉 太棒了！目前沒有待複習的句子。</div>';
+    } else {
+      list.innerHTML = qs.map(q => `
+        <div class="record">
+          <span class="pill orange">需要複習</span>
+          <div style="margin-top:8px;">${q.zh}</div>
+          <div class="en">${q.en}</div>
+          <button class="secondary" onclick='speakText(${JSON.stringify(q.en)})'>🔊 聽一次</button>
+          <button class="primary" onclick='markReviewLearned(${JSON.stringify(q.id)})' style="margin-top:6px;">✅ 我會了</button>
+        </div>`).join("");
+    }
+  }
+
+  function speakText(text) {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = .82;
+    speechSynthesis.speak(u);
+  }
+
+  function markReviewLearned(id) {
+    const p = loadProgress();
+    if (!p.learned.includes(id)) p.learned.push(id);
+    p.failed = p.failed.filter(x => x !== id);
+    saveProgress(p);
+    openReview();
+    updateHomeStats();
+  }
+
+  function openStats() {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("stats").classList.add("active");
+    updateHomeStats();
+    const p = loadProgress();
+    const pool = allQuestions();
+    const records = document.getElementById("statsRecords");
+    const learned = p.learned.map(id => pool.find(q => q.id === id)).filter(Boolean).slice(-12).reverse();
+    records.innerHTML = learned.length
+      ? learned.map(q => `<div class="record"><span class="pill green">已學會</span><div style="margin-top:7px;">${q.zh}</div><div class="en">${q.en}</div></div>`).join("")
+      : '<div class="tip">完成第一句英文後，這裡會開始出現學習紀錄。</div>';
+  }
+
+  function openSettings() {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("settingsPage").classList.add("active");
+    const s = getSettings();
+    soundEnabled = s.sound !== false;
+    autoSpeakEnabled = s.autoSpeak === true;
+    document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
+    document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled});
+    document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
+  }
+
+  function toggleAutoSpeak() {
+    autoSpeakEnabled = !autoSpeakEnabled;
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled});
+    document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
+  }
+
+  function resetProgress() {
+    if (confirm("確定要刪除所有學習紀錄嗎？")) {
+      localStorage.removeItem(STORAGE_KEY);
+      updateHomeStats();
+      updateLearningStatus();
+      showToast("已重設學習紀錄");
+      setTimeout(goHome, 500);
+    }
   }
 
   function speakEnglish() {
@@ -664,9 +1202,13 @@
     recognition.start();
   }
 
-  // 建立今天的 5 題題單（第一次使用時才建立）。
+  // 讀取設定並建立今天的 5 題題單。
+  const initialSettings = getSettings();
+  soundEnabled = initialSettings.sound !== false;
+  autoSpeakEnabled = initialSettings.autoSpeak === true;
   getDailyQuestions();
   updateLearningStatus();
+  updateHomeStats();
 
   function showToast(message) {
     const toast = document.getElementById("toast");
