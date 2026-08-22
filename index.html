@@ -194,7 +194,7 @@
         <button class="card purple" onclick="openLesson('今日英文')">
           <div class="icon">📅</div>
           <h2>今日英文</h2>
-          <p>每天 5 句實用英文，從題庫隨機練習<br>天天進步一點點</p>
+          <p>每天從 80 句題庫隨機挑 5 句<br>天天進步一點點</p>
         </button>
 
         <button class="card orange" onclick="openLesson('餐廳')">
@@ -222,7 +222,7 @@
           <strong>1 天</strong>
         </div>
         <div class="bar"><div></div></div>
-        <p style="color:#777184;margin-bottom:0;">今天完成 1 / 20 句</p>
+        <p id="homeProgressText" style="color:#777184;margin-bottom:0;">今天完成 0 / 5 句</p>
       </div>
     </main>
   </section>
@@ -238,12 +238,19 @@
         <div class="actions">
           <button class="secondary" onclick="speakEnglish()">🔊 聽一次</button>
           <button class="secondary" onclick="practiceSpeaking()">🎤 跟著說</button>
+          <button class="secondary" onclick="markCurrent(true)">✅ 我會了</button>
+          <button class="secondary" onclick="markCurrent(false)">🔁 明天再複習</button>
           <button class="primary" onclick="nextLesson()">下一句 ▶</button>
         </div>
 
         <div class="tip">
           💡 <strong>小提示</strong><br>
           不用害怕說錯。先敢開口，再慢慢進步！
+        </div>
+
+        <div class="tip" style="background:#f2efff;">
+          📚 <strong>學習紀錄</strong>
+          <div id="learningStatus" style="margin-top:6px;">今天 0 / 5</div>
         </div>
 
         <div class="tip" style="background:#eef8ff;">
@@ -357,40 +364,248 @@
     ]
   };
 
+  const STORAGE_KEY = "englishLearningProgressV1";
   let currentCategory = "今日英文";
   let currentIndex = 0;
+  let currentQuestions = [];
+
+  function loadProgress() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        learned: [],
+        failed: [],
+        daily: {}
+      };
+    } catch (e) {
+      return { learned: [], failed: [], daily: {} };
+    }
+  }
+
+  function saveProgress(progress) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function yesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function allQuestions() {
+    const pool = [];
+    Object.keys(lessons).forEach(category => {
+      lessons[category].forEach((item, index) => {
+        pool.push({
+          id: category + "_" + index,
+          category,
+          index,
+          zh: item[0],
+          en: item[1]
+        });
+      });
+    });
+    return pool;
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function createDailyQuestions() {
+    const progress = loadProgress();
+    const key = todayKey();
+    const yesterday = progress.daily[yesterdayKey()] || [];
+    const pool = allQuestions();
+
+    // 先放入昨天答錯的題目，確保隔天複習。
+    const failedYesterday = yesterday
+      .filter(id => progress.failed.includes(id))
+      .map(id => pool.find(q => q.id === id))
+      .filter(Boolean);
+
+    const yesterdayIds = new Set(yesterday);
+    const learnedIds = new Set(progress.learned);
+
+    // 其餘題目盡量避開昨天，並優先選尚未學會的。
+    let candidates = shuffle(pool.filter(q =>
+      !yesterdayIds.has(q.id) && !learnedIds.has(q.id)
+    ));
+
+    if (candidates.length < 5 - failedYesterday.length) {
+      candidates = shuffle(pool.filter(q =>
+        !yesterdayIds.has(q.id) &&
+        !failedYesterday.some(f => f.id === q.id)
+      ));
+    }
+
+    let selected = [...failedYesterday];
+    selected = selected.concat(candidates.slice(0, 5 - selected.length));
+
+    // 若仍不足 5 題，再從整個題庫補足。
+    if (selected.length < 5) {
+      const selectedIds = new Set(selected.map(q => q.id));
+      const extra = shuffle(pool.filter(q => !selectedIds.has(q.id)));
+      selected = selected.concat(extra.slice(0, 5 - selected.length));
+    }
+
+    progress.daily[key] = selected.map(q => q.id);
+    saveProgress(progress);
+    return selected;
+  }
+
+  function getDailyQuestions() {
+    const progress = loadProgress();
+    const key = todayKey();
+    const ids = progress.daily[key];
+    const pool = allQuestions();
+
+    if (ids && ids.length === 5) {
+      return ids.map(id => pool.find(q => q.id === id)).filter(Boolean);
+    }
+    return createDailyQuestions();
+  }
+
+  function recordResult(question, isCorrect) {
+    const progress = loadProgress();
+    const id = question.id;
+
+    progress.learned = progress.learned || [];
+    progress.failed = progress.failed || [];
+
+    if (isCorrect) {
+      if (!progress.learned.includes(id)) progress.learned.push(id);
+      progress.failed = progress.failed.filter(x => x !== id);
+    } else {
+      if (!progress.failed.includes(id)) progress.failed.push(id);
+      progress.learned = progress.learned.filter(x => x !== id);
+    }
+
+    saveProgress(progress);
+    updateLearningStatus();
+  }
+
+  function updateLearningStatus() {
+    const progress = loadProgress();
+    const today = progress.daily[todayKey()] || [];
+    const learnedToday = today.filter(id => progress.learned.includes(id)).length;
+    const status = document.getElementById("learningStatus");
+    if (status) status.textContent = `今天 ${learnedToday} / ${today.length || 5} 句完成`;
+    const homeProgress = document.getElementById("homeProgressText");
+    if (homeProgress) homeProgress.textContent = `今天完成 ${learnedToday} / ${today.length || 5} 句`;
+  }
 
   function openLesson(category) {
-    currentCategory = category;
+    if (category === "今日英文") {
+      currentCategory = category;
+      currentQuestions = getDailyQuestions();
+    } else {
+      currentCategory = category;
+      currentQuestions = lessons[category].map((item, index) => ({
+        id: category + "_" + index,
+        category,
+        index,
+        zh: item[0],
+        en: item[1]
+      }));
+    }
+
     currentIndex = 0;
     updateLesson();
     document.getElementById("home").classList.remove("active");
     document.getElementById("lesson").classList.add("active");
+    updateLearningStatus();
     window.scrollTo(0,0);
   }
 
   function updateLesson() {
-    const item = lessons[currentCategory][currentIndex];
+    const q = currentQuestions[currentIndex];
     document.getElementById("lessonTitle").textContent = currentCategory;
     document.getElementById("counter").textContent =
-      `${currentIndex + 1} / ${lessons[currentCategory].length}`;
-    document.getElementById("zh").textContent = item[0];
-    document.getElementById("en").textContent = item[1];
+      `${currentIndex + 1} / ${currentQuestions.length}`;
+    document.getElementById("zh").textContent = q.zh;
+    document.getElementById("en").textContent = q.en;
+    document.getElementById("speechResult").textContent = "按「跟著說」開始練習。";
+    document.getElementById("speechFeedback").textContent = "";
+  }
+
+  function playResultSound(isCorrect) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+      osc.type = isCorrect ? "sine" : "square";
+
+      if (isCorrect) {
+        // 答對：清脆的兩段上升音
+        osc.frequency.setValueAtTime(660, now);
+        osc.frequency.setValueAtTime(880, now + 0.10);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.30);
+      } else {
+        // 答錯：短促、較低的提示音
+        osc.frequency.setValueAtTime(220, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.14, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.24);
+      }
+
+      setTimeout(() => {
+        try { ctx.close(); } catch (e) {}
+      }, 500);
+    } catch (e) {
+      // 某些瀏覽器限制自動播放時，忽略聲音即可，不影響學習功能。
+    }
+  }
+
+  function markCurrent(isCorrect) {
+    playResultSound(isCorrect);
+    if (currentCategory === "今日英文") {
+      recordResult(currentQuestions[currentIndex], isCorrect);
+    }
+    showToast(isCorrect ? "🟢 已記錄：學會了！" : "🟡 已記錄：明天再複習！");
   }
 
   function nextLesson() {
-    if (currentIndex < lessons[currentCategory].length - 1) {
+    if (currentIndex < currentQuestions.length - 1) {
       currentIndex++;
       updateLesson();
     } else {
-      showToast("🎉 太棒了！這一課完成！");
-      setTimeout(goHome, 1000);
+      showToast("🎉 今天的 5 句完成！");
+      setTimeout(goHome, 900);
     }
   }
 
   function goHome() {
     document.getElementById("lesson").classList.remove("active");
     document.getElementById("home").classList.add("active");
+    updateLearningStatus();
     window.scrollTo(0,0);
   }
 
@@ -434,9 +649,11 @@
 
       if (normalizedHeard === normalizedTarget) {
         document.getElementById("speechFeedback").textContent = "🟢 太棒了！說得很完整！";
+        markCurrent(true);
       } else {
         document.getElementById("speechFeedback").textContent =
           `🟡 很接近！目標句子是：「${target}」`;
+        markCurrent(false);
       }
     };
 
@@ -446,6 +663,10 @@
 
     recognition.start();
   }
+
+  // 建立今天的 5 題題單（第一次使用時才建立）。
+  getDailyQuestions();
+  updateLearningStatus();
 
   function showToast(message) {
     const toast = document.getElementById("toast");
