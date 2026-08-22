@@ -443,6 +443,19 @@
           <div><strong>🔊 英文自動朗讀</strong><br><small style="color:#777184;">進入題目時自動播放英文</small></div>
           <button id="autoSpeakSwitch" class="switch" onclick="toggleAutoSpeak()"></button>
         </div>
+
+        <div class="settings-row" style="display:block;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><strong>🐢 語音速度</strong><br><small style="color:#777184;">調整英文朗讀速度</small></div>
+            <strong id="speedValue">0.8x</strong>
+          </div>
+          <input id="speedSlider" type="range" min="0.5" max="1.2" step="0.1" value="0.8"
+                 oninput="changeSpeechSpeed(this.value)"
+                 style="width:100%;margin-top:14px;">
+          <div style="display:flex;justify-content:space-between;color:#777184;font-size:12px;margin-top:4px;">
+            <span>慢</span><span>正常</span><span>快</span>
+          </div>
+        </div>
         <button class="secondary" style="width:100%;margin-top:14px;" onclick="resetProgress()">重設學習紀錄</button>
       </div>
     </main>
@@ -873,6 +886,7 @@
   let flashRevealed = false;
   let soundEnabled = true;
   let autoSpeakEnabled = false;
+  let speechSpeed = 0.8;
 
   function getSettings() {
     try { return JSON.parse(localStorage.getItem("englishLearningSettingsV1")) || {}; }
@@ -1030,7 +1044,7 @@
     if (!q || !("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(q.en);
-    u.lang = "en-US"; u.rate = .82;
+    u.lang = "en-US"; u.rate = speechSpeed;
     speechSynthesis.speak(u);
   }
 
@@ -1089,7 +1103,7 @@
     if (!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US"; u.rate = .82;
+    u.lang = "en-US"; u.rate = speechSpeed;
     speechSynthesis.speak(u);
   }
 
@@ -1121,20 +1135,30 @@
     const s = getSettings();
     soundEnabled = s.sound !== false;
     autoSpeakEnabled = s.autoSpeak === true;
+    speechSpeed = Number(s.speed) || 0.8;
     document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
     document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
+    document.getElementById("speedSlider").value = speechSpeed;
+    document.getElementById("speedValue").textContent = speechSpeed.toFixed(1) + "x";
   }
 
   function toggleSound() {
     soundEnabled = !soundEnabled;
-    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled});
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed});
     document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
   }
 
   function toggleAutoSpeak() {
     autoSpeakEnabled = !autoSpeakEnabled;
-    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled});
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed});
     document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
+  }
+
+  function changeSpeechSpeed(value) {
+    speechSpeed = Number(value);
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed});
+    const label = document.getElementById("speedValue");
+    if (label) label.textContent = speechSpeed.toFixed(1) + "x";
   }
 
   function resetProgress() {
@@ -1153,7 +1177,7 @@
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "en-US";
-      u.rate = 0.85;
+      u.rate = speechSpeed;
       speechSynthesis.speak(u);
     } else {
       showToast("你的瀏覽器目前不支援英文語音播放");
@@ -1206,6 +1230,7 @@
   const initialSettings = getSettings();
   soundEnabled = initialSettings.sound !== false;
   autoSpeakEnabled = initialSettings.autoSpeak === true;
+  speechSpeed = Number(initialSettings.speed) || 0.8;
   getDailyQuestions();
   updateLearningStatus();
   updateHomeStats();
