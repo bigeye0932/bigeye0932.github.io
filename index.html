@@ -239,6 +239,16 @@
     .phonetic{font-size:28px;font-weight:800;color:#6c3ceb;margin:8px 0}
     .syllables{color:#716b80;margin-bottom:12px}
     .word-practice-input{width:100%;padding:13px;border:2px solid #ece8f5;border-radius:14px;font-size:18px;outline:none}
+
+    .mic-permission {
+      margin-top: 12px; padding: 14px 16px; border-radius: 16px;
+      background: #f7f5ff; border: 1px solid #e7e0ff;
+    }
+    .mic-status { font-weight: 800; margin-bottom: 5px; }
+    .mic-status.granted { color:#237a44; }
+    .mic-status.denied { color:#a34b38; }
+    .mic-status.unknown { color:#6c3ceb; }
+    .mic-help { color:#716b80; font-size:14px; line-height:1.5; margin:0; }
   </style>
 </head>
 <body>
@@ -366,8 +376,13 @@
 
         <div class="tip" style="background:#eef8ff;">
           <strong>🎤 語音練習</strong>
-          <div id="speechResult" style="margin-top:8px;">按「跟著說」開始練習。</div>
+          <div id="speechResult" style="margin-top:8px;">第一次使用請先允許麥克風。</div>
           <div id="speechFeedback" style="margin-top:6px;"></div>
+          <div class="mic-permission">
+            <div id="micStatus" class="mic-status unknown">🎤 麥克風權限：尚未確認</div>
+            <p id="micHelp" class="mic-help">按「跟著說」時會向瀏覽器請求一次麥克風權限。允許後，App 會記住已授權狀態。</p>
+            <button id="micPermissionButton" class="secondary" style="width:100%;margin-top:10px;" onclick="requestMicrophonePermission(true)">🎤 允許麥克風</button>
+          </div>
         </div>
       </div>
     </main>
@@ -823,8 +838,10 @@
       `${currentIndex + 1} / ${currentQuestions.length}`;
     document.getElementById("zh").textContent = q.zh;
     renderClickableSentence(q.en);
-    document.getElementById("speechResult").textContent = "按「跟著說」開始練習。";
+    document.getElementById("speechResult").textContent =
+      micPermissionState === "granted" ? "按「跟著說」開始練習。" : "第一次使用請先允許麥克風。";
     document.getElementById("speechFeedback").textContent = "";
+    checkMicrophonePermission();
     if (autoSpeakEnabled) setTimeout(speakEnglish, 200);
   }
 
@@ -1307,7 +1324,7 @@
     if ("speechSynthesis" in window) {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = "en-US";
+      u.lang = accent || "en-US";
       u.rate = speechSpeed;
       speechSynthesis.speak(u);
     } else {
@@ -1316,8 +1333,102 @@
   }
 
   let recognition = null;
+  let micPermissionState = "unknown";
 
-  function practiceSpeaking() {
+  function setMicUI(state, message) {
+    micPermissionState = state;
+    const status = document.getElementById("micStatus");
+    const help = document.getElementById("micHelp");
+    const button = document.getElementById("micPermissionButton");
+    if (!status) return;
+
+    status.className = "mic-status " + state;
+
+    if (state === "granted") {
+      status.textContent = "🟢 麥克風權限：已允許";
+      help.textContent = message || "已經允許麥克風。之後按「跟著說」時，不需要 App 再次要求權限。";
+      button.textContent = "🟢 麥克風已允許";
+      button.disabled = true;
+      button.style.opacity = ".65";
+    } else if (state === "denied") {
+      status.textContent = "🔴 麥克風權限：被拒絕";
+      help.textContent = message || "請到瀏覽器的網站權限設定，把本網站的「麥克風」改成允許，再回到 App。";
+      button.textContent = "⚙️ 重新檢查麥克風";
+      button.disabled = false;
+      button.style.opacity = "1";
+    } else {
+      status.textContent = "🟡 麥克風權限：尚未確認";
+      help.textContent = message || "第一次使用請按「允許麥克風」。瀏覽器會顯示一次權限詢問。";
+      button.textContent = "🎤 允許麥克風";
+      button.disabled = false;
+      button.style.opacity = "1";
+    }
+  }
+
+  async function checkMicrophonePermission() {
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const result = await navigator.permissions.query({ name: "microphone" });
+        if (result.state === "granted") {
+          localStorage.setItem("englishMicPermissionV1", "granted");
+          setMicUI("granted");
+          return "granted";
+        }
+        if (result.state === "denied") {
+          setMicUI("denied");
+          return "denied";
+        }
+      }
+    } catch (e) {
+      // Safari / iOS 可能不支援 permissions.query，改用本機記錄與 getUserMedia。
+    }
+
+    if (localStorage.getItem("englishMicPermissionV1") === "granted") {
+      setMicUI("granted");
+      return "granted";
+    }
+
+    setMicUI("unknown");
+    return "unknown";
+  }
+
+  async function requestMicrophonePermission(forceCheck = false) {
+    // 已經成功授權過，就直接使用 SpeechRecognition，不再重複呼叫權限詢問。
+    // 若使用者按「重新檢查」，才會再次確認瀏覽器的實際權限。
+    if (!forceCheck && localStorage.getItem("englishMicPermissionV1") === "granted") {
+      setMicUI("granted");
+      return true;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setMicUI("denied", "此瀏覽器沒有提供麥克風權限 API。請改用最新版 Safari 或 Chrome，並確認網址是 HTTPS。");
+      showToast("請使用 HTTPS 網站與最新版瀏覽器");
+      return false;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+
+      localStorage.setItem("englishMicPermissionV1", "granted");
+      setMicUI("granted");
+      showToast("🟢 麥克風已允許，之後不會重複要求");
+      return true;
+    } catch (error) {
+      localStorage.removeItem("englishMicPermissionV1");
+
+      if (error && (error.name === "NotAllowedError" || error.name === "SecurityError")) {
+        setMicUI("denied", "如果你之前按過「不允許」，請到瀏覽器的網站設定，把本網站的「麥克風」改為「允許」，再回來按一次。");
+        showToast("🔴 麥克風未允許，請到網站設定開啟");
+      } else {
+        setMicUI("unknown", "目前無法取得麥克風。請確認裝置有麥克風、網站使用 HTTPS，並再試一次。");
+        showToast("無法取得麥克風，請再試一次");
+      }
+      return false;
+    }
+  }
+
+  async function practiceSpeaking() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
@@ -1325,8 +1436,11 @@
       return;
     }
 
+    const permission = await requestMicrophonePermission(false);
+    if (!permission) return;
+
     recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
+    recognition.lang = accent || "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
@@ -1335,8 +1449,8 @@
     recognition.onresult = function(event) {
       const heard = event.results[0][0].transcript.trim();
       const target = document.getElementById("en").textContent.trim();
-      const normalizedHeard = heard.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\\s+/g, " ");
-      const normalizedTarget = target.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\\s+/g, " ");
+      const normalizedHeard = heard.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ");
+      const normalizedTarget = target.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ");
 
       document.getElementById("speechResult").textContent = `你說：「${heard}」`;
 
@@ -1350,11 +1464,21 @@
       }
     };
 
-    recognition.onerror = function() {
-      showToast("沒有聽清楚，再試一次！");
+    recognition.onerror = function(event) {
+      if (event && (event.error === "not-allowed" || event.error === "service-not-allowed")) {
+        localStorage.removeItem("englishMicPermissionV1");
+        setMicUI("denied", "瀏覽器拒絕了麥克風。請在網站權限中把「麥克風」改為允許，再回到 App。");
+        showToast("🔴 麥克風權限被拒絕");
+      } else {
+        showToast("沒有聽清楚，再試一次！");
+      }
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (e) {
+      showToast("語音練習正在啟動，請稍候再試");
+    }
   }
 
   // 讀取設定並建立今天的 5 題題單。
@@ -1365,6 +1489,7 @@
   accent = initialSettings.accent || "en-US";
   getDailyQuestions();
   updateLearningStatus();
+  checkMicrophonePermission();
   updateHomeStats();
 
   function showToast(message) {
