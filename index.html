@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#6C3CEB" />
-  <title>英文學習 App - v7</title>
+  <title>英文學習 App - v8</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -312,6 +312,10 @@
     .mic-status.denied { color:#a34b38; }
     .mic-status.unknown { color:#6c3ceb; }
     .mic-help { color:#716b80; font-size:14px; line-height:1.5; margin:0; }
+  
+    .word-popup-kk{margin-top:8px;color:#6c3ceb;font-size:20px;font-weight:800;letter-spacing:.2px}
+    .word-kk-mini{display:block;color:#6c3ceb;font-size:13px;margin-top:2px;font-weight:700}
+    .word-tap-wrap{display:inline-block;text-align:center;vertical-align:middle}
   </style>
 </head>
 <body>
@@ -662,7 +666,7 @@
 <div id="wordPopupBackdrop" class="word-popup-backdrop" onclick="closeWordPopup(event)">
   <div class="word-popup" onclick="event.stopPropagation()">
     <div class="word-popup-en" id="popupWord">table</div>
-    <div class="word-popup-zh" id="popupMeaning">桌子／餐桌</div>
+    <div class="word-popup-zh" id="popupMeaning">桌子／餐桌</div><div class="word-popup-kk" id="popupKK">/ˈteɪbəl/</div>
     <div class="word-popup-note" id="popupNote">點「🔊 聽發音」可以單獨聽這個單字。</div>
     <div class="actions" style="margin-top:16px;">
       <button class="primary" onclick="speakPopupWord()">🔊 聽發音</button>
@@ -1075,14 +1079,18 @@
     "delicious": "美味的"
   };
 
+  const wordKK = {"do": "/duː/", "you": "/juː/", "have": "/hæv/", "a": "/ə/", "table": "/ˈteɪbəl/", "for": "/fɔr/", "two": "/tuː/", "people": "/ˈpiːpəl/", "may": "/meɪ/", "i": "/aɪ/", "the": "/ðə/", "menu": "/ˈmɛnjuː/", "what": "/wʌt/", "is": "/ɪz/", "this": "/ðɪs/", "check": "/tʃɛk/", "please": "/pliːz/", "where": "/wɛr/", "restroom": "/ˈrɛstˌruːm/", "understand": "/ˌʌndərˈstænd/", "don't": "/doʊnt/", "speak": "/spiːk/", "slowly": "/ˈsloʊli/", "could": "/kʊd/", "say": "/seɪ/", "that": "/ðæt/", "again": "/əˈɡɛn/", "how": "/haʊ/", "much": "/mʌtʃ/", "it": "/ɪt/", "i'd": "/aɪd/", "like": "/laɪk/", "one": "/wʌn/", "no": "/noʊ/", "bag": "/bæɡ/", "thank": "/θæŋk/", "your": "/jʊr/", "help": "/hɛlp/", "excuse": "/ɪkˈskjuːz/", "me": "/miː/", "we": "/wiː/", "there": "/ðɛr/", "are": "/ɑr/", "seven": "/ˈsɛvən/", "of": "/əv/", "us": "/ʌs/", "reservation": "/ˌrɛzərˈveɪʃən/", "my": "/maɪ/", "name": "/neɪm/", "wang": "/wɑːŋ/", "any": "/ˈɛni/", "recommendations": "/ˌrɛkəmenˈdeɪʃənz/", "spicy": "/ˈspaɪsi/", "less": "/lɛs/", "more": "/mɔr/", "water": "/ˈwɔtər/", "dish": "/dɪʃ/", "seafood": "/ˈsiːˌfuːd/", "does": "/dʌz/", "in": "/ɪn/", "to": "/tuː/", "get": "/ɡɛt/", "ready": "/ˈrɛdi/", "bill": "/bɪl/", "pay": "/peɪ/", "card": "/kɑrd/", "food": "/fuːd/", "delicious": "/dɪˈlɪʃəs/", "long": "/lɔŋ/", "wait": "/weɪt/", "we'd": "/wiːd/", "larger": "/ˈlɑrdʒər/", "smaller": "/ˈsmɔlər/", "black": "/blæk/", "on": "/ɑn/", "sale": "/seɪl/", "give": "/ɡɪv/", "discount": "/ˈdɪskaʊnt/", "just": "/dʒʌst/", "looking": "/ˈlʊkɪŋ/", "pair": "/pɛr/", "shoes": "/ʃuːz/", "fitting": "/ˈfɪtɪŋ/", "room": "/ruːm/", "try": "/traɪ/", "too": "/tuː/", "big": "/bɪɡ/", "small": "/smɔl/", "return": "/rɪˈtɜrn/", "airport": "/ˈɛrˌpɔrt/", "passport": "/ˈpæsˌpɔrt/", "luggage": "/ˈlʌɡɪdʒ/", "gate": "/ɡeɪt/", "boarding": "/ˈbɔrdɪŋ/", "flight": "/flaɪt/", "here's": "/hɪrz/", "which": "/wɪtʃ/", "delayed": "/dɪˈleɪd/", "time": "/taɪm/", "duty-free": "/ˌduːti ˈfriː/", "connecting": "/kəˈnɛktɪŋ/", "didn't": "/ˈdɪdənt/", "arrive": "/əˈraɪv/", "need": "/niːd/", "some": "/sʌm/", "shopping": "/ˈʃɑpɪŋ/", "size": "/saɪz/", "color": "/ˈkʌlər/", "colors": "/ˈkʌlərz/", "price": "/praɪs/", "can": "/kæn/", "will": "/wɪl/", "take": "/teɪk/", "another": "/əˈnʌðər/", "other": "/ˈʌðər/", "nice": "/naɪs/", "day": "/deɪ/", "problem": "/ˈprɑbləm/", "here": "/hɪr/", "i'm": "/aɪm/", "go": "/ɡoʊ/", "was": "/wʌz/", "three": "/θriː/", "four": "/fɔr/", "five": "/faɪv/", "six": "/sɪks/", "eight": "/eɪt/", "nine": "/naɪn/", "ten": "/tɛn/", "twelve": "/twɛlv/", "twenty": "/ˈtwɛnti/", "thirty-five": "/ˌθɜrti ˈfaɪv/", "ninety-nine": "/ˌnaɪnti ˈnaɪn/", "fifty": "/ˈfɪfti/", "percent": "/pərˈsɛnt/", "cents": "/sɛnts/", "dollars": "/ˈdɑlərz/", "and": "/ænd/", "thirty-eight": "/ˌθɜrti ˈeɪt/", "forty-two": "/ˌfɔrti ˈtuː/"};
+
   let popupWordText = "";
 
   function showWordTranslation(word) {
     const key = word.toLowerCase().trim();
     const meaning = wordTranslations[key] || "這個單字的中文翻譯";
+    const pronunciation = wordKK[key] || "KK 音標尚未建立";
     popupWordText = word;
     document.getElementById("popupWord").textContent = word;
     document.getElementById("popupMeaning").textContent = meaning;
+    document.getElementById("popupKK").textContent = pronunciation;
     document.getElementById("popupNote").textContent = "點「🔊 聽發音」可以單獨聽這個單字。";
     document.getElementById("wordPopupBackdrop").classList.add("show");
     speakText(word);
@@ -1104,12 +1112,21 @@
       const clean=part.replace(/^[^A-Za-z]+|[^A-Za-z\'-]+$/g,"");
       if(!clean){box.appendChild(document.createTextNode(part));return;}
       const key=clean.toLowerCase();
+      const wrap=document.createElement("span");
+      wrap.className="word-tap-wrap";
       const b=document.createElement("button");
       b.className="word-tap" + (wordTranslations[key] ? " has-translation" : "");
       b.textContent=part;
-      b.title="點一下：看中文翻譯＋聽發音";
+      b.title="點一下：看中文翻譯＋KK音標＋聽發音";
       b.onclick=e=>{e.stopPropagation();showWordTranslation(clean)};
-      box.appendChild(b);
+      wrap.appendChild(b);
+      if(wordKK[key]){
+        const kk=document.createElement("span");
+        kk.className="word-kk-mini";
+        kk.textContent=wordKK[key];
+        wrap.appendChild(kk);
+      }
+      box.appendChild(wrap);
     });
   }
 
