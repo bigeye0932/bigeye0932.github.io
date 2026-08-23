@@ -490,6 +490,20 @@
           <button id="autoSpeakSwitch" class="switch" onclick="toggleAutoSpeak()"></button>
         </div>
 
+        <div class="settings-row">
+          <div>
+            <strong>🗣️ 老師發音</strong><br>
+            <small style="color:#777184;">預設為美式英文</small>
+          </div>
+          <select id="accentSelect" onchange="changeAccent(this.value)"
+                  style="padding:10px 12px;border:2px solid #ece8f5;border-radius:12px;background:white;font-weight:700;">
+            <option value="en-US">🇺🇸 美式英文</option>
+            <option value="en-GB">🇬🇧 英式英文</option>
+            <option value="en-AU">🇦🇺 澳洲英文</option>
+            <option value="en-CA">🇨🇦 加拿大英文</option>
+          </select>
+        </div>
+
         <div class="settings-row" style="display:block;">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div><strong>🐢 語音速度</strong><br><small style="color:#777184;">調整英文朗讀速度</small></div>
@@ -993,6 +1007,7 @@
   let soundEnabled = true;
   let autoSpeakEnabled = false;
   let speechSpeed = 0.8;
+  let accent = "en-US";
 
   function getSettings() {
     try { return JSON.parse(localStorage.getItem("englishLearningSettingsV1")) || {}; }
@@ -1150,7 +1165,7 @@
     if (!q || !("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(q.en);
-    u.lang = "en-US"; u.rate = speechSpeed;
+    u.lang = accent; u.rate = speechSpeed;
     speechSynthesis.speak(u);
   }
 
@@ -1209,7 +1224,7 @@
     if (!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US"; u.rate = speechSpeed;
+    u.lang = accent; u.rate = speechSpeed;
     speechSynthesis.speak(u);
   }
 
@@ -1242,27 +1257,37 @@
     soundEnabled = s.sound !== false;
     autoSpeakEnabled = s.autoSpeak === true;
     speechSpeed = Number(s.speed) || 0.8;
+    accent = s.accent || "en-US";
     document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
     document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
     document.getElementById("speedSlider").value = speechSpeed;
     document.getElementById("speedValue").textContent = speechSpeed.toFixed(1) + "x";
+    document.getElementById("accentSelect").value = accent;
   }
 
   function toggleSound() {
     soundEnabled = !soundEnabled;
-    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed});
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
     document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
   }
 
   function toggleAutoSpeak() {
     autoSpeakEnabled = !autoSpeakEnabled;
-    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed});
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
     document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
+  }
+
+  function changeAccent(value) {
+    accent = value || "en-US";
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
+    showToast(accent === "en-US" ? "🇺🇸 已切換為美式英文" :
+      accent === "en-GB" ? "🇬🇧 已切換為英式英文" :
+      accent === "en-AU" ? "🇦🇺 已切換為澳洲英文" : "🇨🇦 已切換為加拿大英文");
   }
 
   function changeSpeechSpeed(value) {
     speechSpeed = Number(value);
-    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed});
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
     const label = document.getElementById("speedValue");
     if (label) label.textContent = speechSpeed.toFixed(1) + "x";
   }
@@ -1337,6 +1362,7 @@
   soundEnabled = initialSettings.sound !== false;
   autoSpeakEnabled = initialSettings.autoSpeak === true;
   speechSpeed = Number(initialSettings.speed) || 0.8;
+  accent = initialSettings.accent || "en-US";
   getDailyQuestions();
   updateLearningStatus();
   updateHomeStats();
