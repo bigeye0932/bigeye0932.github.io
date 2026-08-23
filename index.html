@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#6C3CEB" />
-  <title>英文學習 App - v8.1</title>
+  <title>英文學習 App - v8.2</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -314,8 +314,6 @@
     .mic-help { color:#716b80; font-size:14px; line-height:1.5; margin:0; }
   
     .word-popup-kk{margin-top:8px;color:#6c3ceb;font-size:20px;font-weight:800;letter-spacing:.2px}
-    .word-kk-mini{display:block;color:#6c3ceb;font-size:13px;margin-top:2px;font-weight:700}
-    .word-tap-wrap{display:inline-block;text-align:center;vertical-align:middle}
   </style>
 </head>
 <body>
@@ -1112,21 +1110,12 @@
       const clean=part.replace(/^[^A-Za-z]+|[^A-Za-z\'-]+$/g,"");
       if(!clean){box.appendChild(document.createTextNode(part));return;}
       const key=clean.toLowerCase();
-      const wrap=document.createElement("span");
-      wrap.className="word-tap-wrap";
       const b=document.createElement("button");
       b.className="word-tap" + (wordTranslations[key] ? " has-translation" : "");
       b.textContent=part;
       b.title="點一下：看中文翻譯＋KK音標＋聽發音";
       b.onclick=e=>{e.stopPropagation();showWordTranslation(clean)};
-      wrap.appendChild(b);
-      if(wordKK[key]){
-        const kk=document.createElement("span");
-        kk.className="word-kk-mini";
-        kk.textContent=wordKK[key];
-        wrap.appendChild(kk);
-      }
-      box.appendChild(wrap);
+      box.appendChild(b);
     });
   }
 
