@@ -232,6 +232,13 @@
     .switch.on:after { left:25px; }
     @media (max-width:430px) { .stats-grid{gap:7px}.stat{padding:12px 6px}.stat strong{font-size:19px} }
 
+  
+    .word-tap{border:0;background:transparent;padding:2px 3px;margin:0 1px;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;border-radius:6px;text-decoration:underline dotted #8d7bd8}
+    .word-tap:hover{background:#f0ebff}
+    .phonics-card{background:white;border-radius:20px;padding:20px;margin-top:14px;box-shadow:0 5px 16px rgba(60,40,120,.07)}
+    .phonetic{font-size:28px;font-weight:800;color:#6c3ceb;margin:8px 0}
+    .syllables{color:#716b80;margin-bottom:12px}
+    .word-practice-input{width:100%;padding:13px;border:2px solid #ece8f5;border-radius:14px;font-size:18px;outline:none}
   </style>
 </head>
 <body>
@@ -274,6 +281,15 @@
         </button>
       </div>
 
+
+      <div class="section-title" style="margin-top:22px;">單字發音</div>
+      <div class="grid">
+        <button class="card blue" onclick="openWordPractice()">
+          <div class="icon">🔤</div>
+          <h2>單字練習</h2>
+          <p>單字讀法、KK 音標<br>聽發音與拼字練習</p>
+        </button>
+      </div>
 
       <div class="section-title" style="margin-top:22px;">更多練習</div>
       <div class="grid">
@@ -343,6 +359,11 @@
           <div id="learningStatus" style="margin-top:6px;">今天 0 / 5</div>
         </div>
 
+        <div class="tip" style="background:#f3efff;">
+          <strong>👆 小技巧</strong><br>
+          句子裡的<strong>每一個英文單字都可以單獨點擊發音</strong>。
+        </div>
+
         <div class="tip" style="background:#eef8ff;">
           <strong>🎤 語音練習</strong>
           <div id="speechResult" style="margin-top:8px;">按「跟著說」開始練習。</div>
@@ -388,6 +409,31 @@
     </main>
   </section>
 
+
+  <section id="wordPractice" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter">🔤 單字發音</span> · <span id="wordCounter">1 / 20</span></div>
+        <div class="zh" id="wordMeaning">請選一個單字</div>
+        <div class="en" id="wordTarget">table</div>
+        <div class="phonics-card">
+          <div class="small">KK 音標</div>
+          <div class="phonetic" id="wordKK">/ˈteɪbəl/</div>
+          <div class="syllables" id="wordSyllables">ta-ble · 2 音節</div>
+          <button class="primary" style="width:100%;" onclick="speakCurrentWord()">🔊 聽單字</button>
+        </div>
+        <div class="phonics-card">
+          <strong>✍️ 拼字練習</strong>
+          <p style="color:#716b80;">聽完後輸入你聽到的英文單字</p>
+          <input id="wordAnswer" class="word-practice-input" placeholder="輸入英文單字">
+          <button class="secondary" style="width:100%;margin-top:10px;" onclick="checkWordSpelling()">檢查</button>
+          <div id="wordFeedback" style="margin-top:10px;font-weight:800;"></div>
+        </div>
+        <button class="primary" style="width:100%;margin-top:14px;" onclick="nextWord()">下一個單字 ▶</button>
+      </div>
+    </main>
+  </section>
 
   <section id="quiz" class="page">
     <main>
@@ -744,13 +790,25 @@
     window.scrollTo(0,0);
   }
 
+  function renderClickableSentence(sentence){
+    const box=document.getElementById("en"); box.innerHTML="";
+    sentence.split(/(\s+)/).forEach(part=>{
+      if(/^\s+$/.test(part)){box.appendChild(document.createTextNode(part));return;}
+      const clean=part.replace(/^[^A-Za-z]+|[^A-Za-z\'-]+$/g,"");
+      if(!clean){box.appendChild(document.createTextNode(part));return;}
+      const b=document.createElement("button"); b.className="word-tap"; b.textContent=part;
+      b.title="點一下聽這個單字"; b.onclick=e=>{e.stopPropagation();speakText(clean)};
+      box.appendChild(b);
+    });
+  }
+
   function updateLesson() {
     const q = currentQuestions[currentIndex];
     document.getElementById("lessonTitle").textContent = currentCategory;
     document.getElementById("counter").textContent =
       `${currentIndex + 1} / ${currentQuestions.length}`;
     document.getElementById("zh").textContent = q.zh;
-    document.getElementById("en").textContent = q.en;
+    renderClickableSentence(q.en);
     document.getElementById("speechResult").textContent = "按「跟著說」開始練習。";
     document.getElementById("speechFeedback").textContent = "";
     if (autoSpeakEnabled) setTimeout(speakEnglish, 200);
@@ -877,6 +935,54 @@
     window.scrollTo(0,0);
   }
 
+
+  const wordBank = [
+    {word:"table",meaning:"桌子／餐桌",kk:"/ˈteɪbəl/",syllables:"ta-ble · 2 音節"},
+    {word:"menu",meaning:"菜單",kk:"/ˈmɛnju/",syllables:"men-u · 2 音節"},
+    {word:"reservation",meaning:"預約／訂位",kk:"/ˌrɛzɚˈveʃən/",syllables:"res-er-va-tion · 4 音節"},
+    {word:"restaurant",meaning:"餐廳",kk:"/ˈrɛstəˌrɑnt/",syllables:"res-tau-rant · 3 音節"},
+    {word:"delicious",meaning:"美味的",kk:"/dɪˈlɪʃəs/",syllables:"de-li-cious · 3 音節"},
+    {word:"water",meaning:"水",kk:"/ˈwɔtɚ/",syllables:"wa-ter · 2 音節"},
+    {word:"airport",meaning:"機場",kk:"/ˈɛrˌpɔrt/",syllables:"air-port · 2 音節"},
+    {word:"passport",meaning:"護照",kk:"/ˈpæsˌpɔrt/",syllables:"pass-port · 2 音節"},
+    {word:"luggage",meaning:"行李",kk:"/ˈlʌɡɪdʒ/",syllables:"lug-gage · 2 音節"},
+    {word:"boarding",meaning:"登機",kk:"/ˈbɔrdɪŋ/",syllables:"board-ing · 2 音節"},
+    {word:"flight",meaning:"航班",kk:"/flaɪt/",syllables:"flight · 1 音節"},
+    {word:"gate",meaning:"登機門",kk:"/ɡeɪt/",syllables:"gate · 1 音節"},
+    {word:"shopping",meaning:"購物",kk:"/ˈʃɑpɪŋ/",syllables:"shop-ping · 2 音節"},
+    {word:"size",meaning:"尺寸",kk:"/saɪz/",syllables:"size · 1 音節"},
+    {word:"color",meaning:"顏色",kk:"/ˈkʌlər/",syllables:"col-or · 2 音節"},
+    {word:"discount",meaning:"折扣",kk:"/ˈdɪskaʊnt/",syllables:"dis-count · 2 音節"},
+    {word:"price",meaning:"價格",kk:"/praɪs/",syllables:"price · 1 音節"},
+    {word:"restroom",meaning:"洗手間",kk:"/ˈrɛstˌrum/",syllables:"rest-room · 2 音節"},
+    {word:"help",meaning:"幫助",kk:"/hɛlp/",syllables:"help · 1 音節"},
+    {word:"understand",meaning:"了解／明白",kk:"/ˌʌndɚˈstænd/",syllables:"un-der-stand · 3 音節"}
+  ];
+  let currentWordIndex=0;
+  function openWordPractice(){
+    currentWordIndex=Math.floor(Math.random()*wordBank.length);
+    document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+    document.getElementById("wordPractice").classList.add("active");
+    renderWord(); window.scrollTo(0,0);
+  }
+  function renderWord(){
+    const w=wordBank[currentWordIndex];
+    document.getElementById("wordCounter").textContent=`${currentWordIndex+1} / ${wordBank.length}`;
+    document.getElementById("wordMeaning").textContent=w.meaning;
+    document.getElementById("wordTarget").textContent=w.word;
+    document.getElementById("wordKK").textContent=w.kk;
+    document.getElementById("wordSyllables").textContent=w.syllables;
+    document.getElementById("wordAnswer").value="";
+    document.getElementById("wordFeedback").textContent="";
+  }
+  function speakCurrentWord(){ speakText(wordBank[currentWordIndex].word); }
+  function checkWordSpelling(){
+    const w=wordBank[currentWordIndex], answer=document.getElementById("wordAnswer").value.trim().toLowerCase();
+    const f=document.getElementById("wordFeedback");
+    if(answer===w.word){f.textContent="🟢 答對了！";f.style.color="#237a44";playResultSound(true);}
+    else{f.textContent="🟡 再試一次。";f.style.color="#8a5a11";playResultSound(false);}
+  }
+  function nextWord(){currentWordIndex=(currentWordIndex+1)%wordBank.length;renderWord();}
 
   let quizMode = "choice";
   let quizQuestions = [];
