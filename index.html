@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#6C3CEB" />
-  <title>英文學習 App - v8.2</title>
+  <title>英文學習 App - v8.3</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -209,7 +209,21 @@
     .flashcard .big { font-size:28px; font-weight:800; }
     .word-bank {
       display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
+    }    .fill-edit-panel {
+      background:white; border-radius:18px; padding:16px; margin-top:14px;
+      box-shadow:0 5px 16px rgba(60,40,120,.06);
     }
+    .fill-edit-title { font-weight:800; margin-bottom:10px; }
+    .fill-edit-input {
+      width:100%; min-height:80px; box-sizing:border-box; resize:vertical;
+      border:2px solid #ece8f5; border-radius:14px; padding:12px;
+      font-size:17px; line-height:1.5; font-family:inherit; outline:none;
+    }
+    .fill-edit-input:focus { border-color:#8d72e8; }
+    .fill-edit-actions { display:flex; gap:8px; margin-top:9px; }
+    .fill-edit-actions button { flex:1; }
+    .fill-feedback { min-height:24px; margin-top:10px; font-weight:800; }
+
     .word {
       border:0; background:#eee9ff; color:#5630c7; border-radius:12px; padding:10px 12px;
       cursor:pointer; font-weight:700;
@@ -1509,18 +1523,33 @@
           <div class="small">把下面的單字排成完整句子</div>
           <div class="big" id="fillAnswer" style="font-size:22px;"></div>
         </div>
+
         <div class="word-bank" id="wordBank"></div>
+
+        <div class="fill-edit-panel">
+          <div class="fill-edit-title">✏️ 修改答案</div>
+          <textarea id="fillEditInput" class="fill-edit-input"
+            placeholder="也可以直接修改／重新輸入完整英文句子"></textarea>
+          <div class="fill-edit-actions">
+            <button class="secondary" onclick="applyFillEdit()">套用修改</button>
+            <button class="secondary" onclick="clearFillAnswer()">清除重填</button>
+          </div>
+        </div>
+
+        <div id="fillFeedback" class="fill-feedback"></div>
         <button class="primary" style="width:100%;margin-top:14px;" onclick="checkFill()">檢查答案</button>`;
       const bank = document.getElementById("wordBank");
-      words.forEach((word, i) => {
+      words.forEach((word) => {
         const b = document.createElement("button");
         b.className = "word";
         b.textContent = word;
         b.onclick = () => {
+          if (quizAnswered) return;
           const out = document.getElementById("fillAnswer");
           out.textContent += (out.textContent ? " " : "") + word;
           b.disabled = true;
           b.style.opacity = ".45";
+          document.getElementById("fillEditInput").value = out.textContent;
         };
         bank.appendChild(b);
       });
@@ -1550,18 +1579,59 @@
     setTimeout(nextQuizQuestion, 700);
   }
 
+  function applyFillEdit() {
+    if (quizAnswered) return;
+    const input = document.getElementById("fillEditInput");
+    const answer = input.value.trim();
+    document.getElementById("fillAnswer").textContent = answer;
+    document.querySelectorAll("#wordBank .word").forEach(b => {
+      b.disabled = true;
+      b.style.opacity = ".45";
+    });
+    showToast(answer ? "✏️ 已套用修改" : "請先輸入答案");
+  }
+
+  function clearFillAnswer() {
+    if (quizAnswered) return;
+    document.getElementById("fillAnswer").textContent = "";
+    document.getElementById("fillEditInput").value = "";
+    document.querySelectorAll("#wordBank .word").forEach(b => {
+      b.disabled = false;
+      b.style.opacity = "1";
+    });
+    document.getElementById("fillFeedback").textContent = "";
+  }
+
   function checkFill() {
     if (quizAnswered) return;
     const q = quizQuestions[quizIndex];
-    const typed = document.getElementById("fillAnswer").textContent.trim().toLowerCase().replace(/[?.!,']/g,"");
-    const target = q.en.trim().toLowerCase().replace(/[?.!,']/g,"");
+    const edited = document.getElementById("fillEditInput");
+    const visible = document.getElementById("fillAnswer");
+    const raw = (edited.value || visible.textContent || "").trim();
+    visible.textContent = raw;
+    edited.value = raw;
+
+    const typed = raw.toLowerCase().replace(/[?.!,']/g,"").replace(/\\s+/g," ").trim();
+    const target = q.en.trim().toLowerCase().replace(/[?.!,']/g,"").replace(/\\s+/g," ").trim();
     const correct = typed === target;
-    quizAnswered = true;
-    quizCorrect += correct ? 1 : 0;
-    recordQuizAnswer(q, correct);
-    playResultSound(correct);
-    showToast(correct ? "🟢 完全正確！" : "🟡 再多練習一次！");
-    setTimeout(nextQuizQuestion, 800);
+    const feedback = document.getElementById("fillFeedback");
+
+    if (correct) {
+      quizAnswered = true;
+      quizCorrect++;
+      recordQuizAnswer(q, true);
+      playResultSound(true);
+      feedback.textContent = "🟢 完全正確！";
+      feedback.style.color = "#237a44";
+      setTimeout(nextQuizQuestion, 800);
+    } else {
+      // 答錯時不要立刻跳下一題，讓使用者可以修改。
+      recordQuizAnswer(q, false);
+      playResultSound(false);
+      feedback.innerHTML = "🟡 還有一點需要修改，可以直接在上面的文字框修正。";
+      feedback.style.color = "#8a5a11";
+      showToast("✏️ 可以修改答案後再檢查");
+    }
   }
 
   function speakQuizText() {
