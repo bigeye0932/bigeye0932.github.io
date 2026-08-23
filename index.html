@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#6C3CEB" />
-  <title>英文學習 App - v8.3</title>
+  <title>英文學習 App - v9</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -223,6 +223,16 @@
     .fill-edit-actions { display:flex; gap:8px; margin-top:9px; }
     .fill-edit-actions button { flex:1; }
     .fill-feedback { min-height:24px; margin-top:10px; font-weight:800; }
+    .today-start-card{background:linear-gradient(135deg,#6c3ceb,#8a63ef);color:white;border-radius:24px;padding:24px 20px;margin-bottom:18px;box-shadow:0 10px 28px rgba(108,60,235,.22)}
+    .today-start-card h2{margin:6px 0;font-size:25px}.today-start-card p{margin:6px 0;color:rgba(255,255,255,.9)}
+    .today-start-button{width:100%;border:0;border-radius:16px;padding:14px;background:white;color:#5630c7;font-size:17px;font-weight:900;margin-top:14px;cursor:pointer}
+    .flow-steps{display:flex;gap:7px;margin:14px 0 18px}.flow-step{flex:1;height:7px;border-radius:99px;background:#e9e4f4}.flow-step.active{background:#6c3ceb}.flow-step.done{background:#55ad73}
+    .flow-label{font-size:13px;color:#777184;text-align:center;margin-top:6px}
+    .flow-stage{background:white;border-radius:22px;padding:20px;box-shadow:0 6px 20px rgba(60,40,120,.07)}
+    .flow-stage-title{font-size:20px;font-weight:900;margin-bottom:8px}.flow-sentence{font-size:25px;font-weight:850;line-height:1.45;margin:15px 0}.flow-translation{font-size:18px;color:#716b80}
+    .speech-score{text-align:center;background:#f3efff;border-radius:18px;padding:18px;margin-top:14px}.speech-score-number{font-size:38px;font-weight:900;color:#6c3ceb}
+    .flow-choice-grid{display:grid;gap:10px;margin-top:14px}.flow-choice{border:2px solid #ece8f5;background:white;border-radius:15px;padding:14px;text-align:left;font-weight:750;cursor:pointer}.flow-choice.correct{border-color:#48a868;background:#effaf2}.flow-choice.wrong{border-color:#e0a23a;background:#fff8e8}
+    .flow-complete{text-align:center;background:white;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(60,40,120,.07)}
 
     .word {
       border:0; background:#eee9ff; color:#5630c7; border-radius:12px; padding:10px 12px;
@@ -343,12 +353,19 @@
     </header>
 
     <main>
+      <div class="today-start-card">
+        <div style="font-size:14px;">⏱️ 今天 5 分鐘</div>
+        <h2>今天就學 5 句英文</h2>
+        <p id="todayStartProgress">每句都會：聽 → 說 → 選 → 填</p>
+        <button class="today-start-button" onclick="openTodayFlow()">▶ 開始今日學習</button>
+      </div>
+
       <div class="section-title">今天想學什麼？</div>
       <div class="grid">
-        <button class="card purple" onclick="openLesson('今日英文')">
+        <button class="card purple" onclick="openTodayFlow()">
           <div class="icon">📅</div>
           <h2>今日英文</h2>
-          <p>每天從 80 句題庫隨機挑 5 句<br>天天進步一點點</p>
+          <p>每天從 80 句題庫挑 5 句<br>用聽、說、選、填完整學會</p>
         </button>
 
         <button class="card orange" onclick="openLesson('餐廳')">
@@ -427,6 +444,21 @@
         <div class="bar"><div id="homeBar" style="width:0%;"></div></div>
         <p id="homeProgressText" style="color:#777184;margin-bottom:0;">今天完成 0 / 5 句</p>
         <p style="color:#777184;margin:7px 0 0;">累積學會 <strong id="homeLearned">0</strong> 句</p>
+      </div>
+    </main>
+  </section>
+
+  <section id="todayFlow" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter">📅 今日 5 分鐘</span> · <span id="flowQuestionCounter">1 / 5</span></div>
+        <div class="flow-steps">
+          <div class="flow-step active" id="flowStep1"></div><div class="flow-step" id="flowStep2"></div>
+          <div class="flow-step" id="flowStep3"></div><div class="flow-step" id="flowStep4"></div>
+        </div>
+        <div class="flow-label" id="flowStageLabel">① 聽一聽</div>
+        <div id="todayFlowArea"></div>
       </div>
     </main>
   </section>
@@ -1416,6 +1448,101 @@
     }
   }
 
+
+  let todayFlowQuestions=[], todayFlowIndex=0, todayFlowStage=0;
+  let todayFlowChoiceAnswered=false, todayFlowFillAnswered=false;
+
+  function openTodayFlow(){
+    todayFlowQuestions=getDailyQuestions(); todayFlowIndex=0; todayFlowStage=0;
+    todayFlowChoiceAnswered=false; todayFlowFillAnswered=false;
+    document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+    document.getElementById("todayFlow").classList.add("active");
+    renderTodayFlow(); window.scrollTo(0,0);
+  }
+  function updateFlowSteps(){
+    const labels=["① 聽一聽","② 跟著說","③ 小測驗","④ 填空"];
+    document.getElementById("flowStageLabel").textContent=labels[todayFlowStage];
+    for(let i=1;i<=4;i++){const e=document.getElementById("flowStep"+i);e.className="flow-step";if(i-1<todayFlowStage)e.classList.add("done");if(i-1===todayFlowStage)e.classList.add("active");}
+  }
+  function renderTodayFlow(){
+    const q=todayFlowQuestions[todayFlowIndex]; if(!q)return;
+    document.getElementById("flowQuestionCounter").textContent=`${todayFlowIndex+1} / ${todayFlowQuestions.length}`;
+    updateFlowSteps(); const area=document.getElementById("todayFlowArea");
+    if(todayFlowStage===0){
+      area.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">👂 先聽老師說</div>
+      <div class="flow-translation">${q.zh}</div><div class="flow-sentence" id="flowSentence"></div>
+      <button class="primary" style="width:100%;" onclick="speakTodayFlow()">🔊 聽一次</button>
+      <div class="tip" style="margin-top:12px;">💡 點句子裡的單字，可以看中文、KK 音標，也可以單獨發音。</div>
+      <button class="primary" style="width:100%;margin-top:12px;" onclick="nextFlowStage()">下一步：跟著說 ▶</button></div>`;
+      renderFlowClickableSentence(q.en); setTimeout(speakTodayFlow,250);
+    }else if(todayFlowStage===1){
+      area.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">🎤 換你說</div>
+      <div class="flow-translation">${q.zh}</div><div class="flow-sentence">${q.en}</div>
+      <button class="secondary" style="width:100%;" onclick="speakTodayFlow()">🔊 老師示範</button>
+      <button class="primary" style="width:100%;margin-top:10px;" onclick="practiceTodaySpeaking()">🎤 開始跟著說</button>
+      <div id="flowSpeechResult" style="margin-top:12px;color:#716b80;"></div><div id="flowSpeechFeedback" style="margin-top:8px;font-weight:800;"></div><div id="flowSpeechScore"></div>
+      <button class="primary" style="width:100%;margin-top:12px;" onclick="nextFlowStage()">下一步：小測驗 ▶</button></div>`;
+    }else if(todayFlowStage===2){
+      todayFlowChoiceAnswered=false;
+      const choices=shuffle([q,...shuffle(allQuestions().filter(x=>x.id!==q.id)).slice(0,2)]);
+      area.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">📝 你真的懂了嗎？</div><div class="flow-translation">${q.en}</div>
+      <div class="flow-choice-grid" id="flowChoices"></div><div id="flowChoiceFeedback" style="margin-top:10px;font-weight:800;"></div>
+      <button id="flowChoiceNext" class="primary" style="width:100%;margin-top:12px;" onclick="nextFlowStage()" disabled>下一步：填空 ▶</button></div>`;
+      const box=document.getElementById("flowChoices"); choices.forEach(c=>{const b=document.createElement("button");b.className="flow-choice";b.textContent=c.zh;b.onclick=()=>answerTodayChoice(b,c.id===q.id);box.appendChild(b);});
+    }else{
+      todayFlowFillAnswered=false;
+      const words=shuffle(q.en.replace(/[?.!,']/g,"").split(" "));
+      area.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">✍️ 最後自己組一次</div><div class="flow-translation">${q.zh}</div>
+      <div class="flashcard" style="min-height:100px;margin-top:12px;"><div class="small">把英文句子拼完整</div><div class="big" id="flowFillAnswer" style="font-size:21px;"></div></div>
+      <div class="word-bank" id="flowWordBank"></div><div class="fill-edit-panel"><div class="fill-edit-title">✏️ 可以修改</div>
+      <textarea id="flowFillEdit" class="fill-edit-input" placeholder="也可以直接輸入完整句子"></textarea><div class="fill-edit-actions">
+      <button class="secondary" onclick="applyFlowFillEdit()">套用修改</button><button class="secondary" onclick="clearFlowFill()">清除重填</button></div></div>
+      <div id="flowFillFeedback" class="fill-feedback"></div><button class="primary" style="width:100%;margin-top:12px;" onclick="checkTodayFill()">檢查答案</button></div>`;
+      const bank=document.getElementById("flowWordBank");words.forEach(word=>{const b=document.createElement("button");b.className="word";b.textContent=word;b.onclick=()=>{const o=document.getElementById("flowFillAnswer");o.textContent+=(o.textContent?" ":"")+word;document.getElementById("flowFillEdit").value=o.textContent;b.disabled=true;b.style.opacity=".45";};bank.appendChild(b);});
+    }
+  }
+  function renderFlowClickableSentence(sentence){
+    const box=document.getElementById("flowSentence");box.innerHTML="";
+    sentence.split(/(\s+)/).forEach(part=>{if(/^\s+$/.test(part)){box.appendChild(document.createTextNode(part));return;}
+      const clean=part.replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g,"");if(!clean){box.appendChild(document.createTextNode(part));return;}
+      const b=document.createElement("button");b.className="word-tap";b.textContent=part;b.title="點一下：看中文翻譯＋KK音標＋聽發音";b.onclick=e=>{e.stopPropagation();showWordTranslation(clean)};box.appendChild(b);});
+  }
+  function speakTodayFlow(){const q=todayFlowQuestions[todayFlowIndex];if(q)speakText(q.en);}
+  function nextFlowStage(){if(todayFlowStage<3){todayFlowStage++;renderTodayFlow();window.scrollTo(0,0);}}
+  function answerTodayChoice(button,correct){if(todayFlowChoiceAnswered)return;todayFlowChoiceAnswered=true;document.querySelectorAll("#flowChoices .flow-choice").forEach(b=>b.disabled=true);button.classList.add(correct?"correct":"wrong");const f=document.getElementById("flowChoiceFeedback");f.textContent=correct?"🟢 答對了！":"🟡 再看一次中文意思。";f.style.color=correct?"#237a44":"#8a5a11";document.getElementById("flowChoiceNext").disabled=false;playResultSound(correct);}
+  function applyFlowFillEdit(){document.getElementById("flowFillAnswer").textContent=document.getElementById("flowFillEdit").value.trim();}
+  function clearFlowFill(){document.getElementById("flowFillEdit").value="";document.getElementById("flowFillAnswer").textContent="";document.querySelectorAll("#flowWordBank .word").forEach(b=>{b.disabled=false;b.style.opacity="1"});document.getElementById("flowFillFeedback").textContent="";}
+  function checkTodayFill(){
+    if(todayFlowFillAnswered)return;const q=todayFlowQuestions[todayFlowIndex],input=document.getElementById("flowFillEdit");
+    const raw=(input.value||document.getElementById("flowFillAnswer").textContent||"").trim();
+    const typed=raw.toLowerCase().replace(/[?.!,']/g,"").replace(/\s+/g," ").trim(),target=q.en.toLowerCase().replace(/[?.!,']/g,"").replace(/\s+/g," ").trim();
+    const correct=typed===target,f=document.getElementById("flowFillFeedback");document.getElementById("flowFillAnswer").textContent=raw;input.value=raw;
+    if(correct){todayFlowFillAnswered=true;f.textContent="🟢 完全正確！這一句學會了。";f.style.color="#237a44";recordResult(q,true);playResultSound(true);setTimeout(finishTodaySentence,500);}
+    else{f.textContent="🟡 可以修改上面的句子，再檢查一次。";f.style.color="#8a5a11";playResultSound(false);}
+  }
+  function finishTodaySentence(){if(todayFlowIndex<todayFlowQuestions.length-1){todayFlowIndex++;todayFlowStage=0;todayFlowChoiceAnswered=false;todayFlowFillAnswered=false;renderTodayFlow();window.scrollTo(0,0);}else showTodayFlowComplete();}
+  function showTodayFlowComplete(){
+    const p=loadProgress(),ids=p.daily[todayKey()]||[],learned=ids.filter(id=>p.learned.includes(id)).length;
+    document.getElementById("todayFlowArea").innerHTML=`<div class="flow-complete"><div style="font-size:58px;">🎉</div><h2>今天 5 分鐘完成！</h2>
+    <p style="color:#716b80;">你完成了 ${learned} / ${ids.length||5} 句。</p><div class="stats-grid"><div class="stat"><strong>${p.learned.length}</strong><span>累積學會</span></div><div class="stat"><strong>${p.failed.length}</strong><span>待複習</span></div><div class="stat"><strong>${calculateStreak()}</strong><span>連續天數</span></div></div>
+    <button class="primary" style="width:100%;margin-top:15px;" onclick="goHome()">回首頁</button><button class="secondary" style="width:100%;margin-top:9px;" onclick="openReview()">🔁 複習錯題</button></div>`;
+  }
+  function normalizeSpeechText(s){return s.toLowerCase().replace(/[^a-z0-9' ]/g,"").replace(/\s+/g," ").trim();}
+  function speechSimilarity(a,b){
+    const A=normalizeSpeechText(a).split(" ").filter(Boolean),B=normalizeSpeechText(b).split(" ").filter(Boolean);if(!B.length)return 0;
+    const setA=new Set(A),matched=B.filter(w=>setA.has(w)).length,wordScore=matched/B.length;let same=0;for(let i=0;i<Math.min(A.length,B.length);i++)if(A[i]===B[i])same++;
+    return Math.round(Math.min(100,(wordScore*.65+(same/B.length)*.35)*100));
+  }
+  async function practiceTodaySpeaking(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showToast("目前瀏覽器不支援語音辨識。");return;}
+    const permission=await requestMicrophonePermission(false);if(!permission)return;const q=todayFlowQuestions[todayFlowIndex];
+    recognition=new SR();recognition.lang=accent||"en-US";recognition.interimResults=false;recognition.maxAlternatives=1;
+    document.getElementById("flowSpeechFeedback").textContent="🎤 正在聽，請說完整句子……";
+    recognition.onresult=function(event){const heard=event.results[0][0].transcript.trim(),score=speechSimilarity(heard,q.en);document.getElementById("flowSpeechResult").textContent=`你說：「${heard}」`;document.getElementById("flowSpeechScore").innerHTML=`<div class="speech-score"><div>發音接近度</div><div class="speech-score-number">${score}%</div><div style="color:#716b80;">${score>=90?"🟢 很棒！":score>=70?"🟡 很接近，再說一次會更好":"🔁 沒關係，慢慢跟著老師說"}</div></div>`;document.getElementById("flowSpeechFeedback").textContent=score>=90?"🟢 很好！你已經敢開口了。":"💡 這不是考試，先敢說，再慢慢進步。";};
+    recognition.onerror=function(event){if(event&&(event.error==="not-allowed"||event.error==="service-not-allowed")){localStorage.removeItem("englishMicPermissionV1");setMicUI("denied","瀏覽器拒絕了麥克風。請在網站權限中把「麥克風」改為允許，再回到 App。");}else showToast("沒有聽清楚，再試一次！");};
+    try{recognition.start();}catch(e){showToast("語音練習正在啟動，請稍候再試");}
+  }
+
   let quizMode = "choice";
   let quizQuestions = [];
   let quizIndex = 0;
@@ -1890,37 +2017,38 @@
 
   async function practiceSpeaking() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
     if (!SpeechRecognition) {
-      showToast("目前瀏覽器不支援語音辨識，請用 Chrome 試試看");
+      showToast("目前瀏覽器不支援語音辨識，請用支援語音辨識的瀏覽器。");
       return;
     }
 
     const permission = await requestMicrophonePermission(false);
     if (!permission) return;
 
+    const q = currentQuestions[currentIndex];
     recognition = new SpeechRecognition();
     recognition.lang = accent || "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
     showToast("🎤 請開始說英文……");
+    document.getElementById("speechFeedback").textContent = "🎤 正在聽，請說完整句子……";
 
     recognition.onresult = function(event) {
       const heard = event.results[0][0].transcript.trim();
-      const target = document.getElementById("en").textContent.trim();
-      const normalizedHeard = heard.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ");
-      const normalizedTarget = target.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ");
-
+      const score = speechSimilarity(heard, q.en);
       document.getElementById("speechResult").textContent = `你說：「${heard}」`;
 
-      if (normalizedHeard === normalizedTarget) {
-        document.getElementById("speechFeedback").textContent = "🟢 太棒了！說得很完整！";
-        markCurrent(true);
+      if (score >= 90) {
+        document.getElementById("speechFeedback").innerHTML =
+          `🟢 很棒！發音接近度 <strong>${score}%</strong>。`;
+        recordResult(q, true);
+      } else if (score >= 70) {
+        document.getElementById("speechFeedback").innerHTML =
+          `🟡 很接近！發音接近度 <strong>${score}%</strong>。再說一次會更好。`;
       } else {
-        document.getElementById("speechFeedback").textContent =
-          `🟡 很接近！目標句子是：「${target}」`;
-        markCurrent(false);
+        document.getElementById("speechFeedback").innerHTML =
+          `🔁 發音接近度 <strong>${score}%</strong>。不用怕，跟著老師慢慢說。`;
       }
     };
 
@@ -1940,6 +2068,7 @@
       showToast("語音練習正在啟動，請稍候再試");
     }
   }
+
 
   // 讀取設定並建立今天的 5 題題單。
   const initialSettings = getSettings();
