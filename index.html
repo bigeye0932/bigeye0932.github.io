@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#6C3CEB" />
-  <title>英文學習 App</title>
+  <title>英文學習 App - v7</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -240,6 +240,69 @@
     .syllables{color:#716b80;margin-bottom:12px}
     .word-practice-input{width:100%;padding:13px;border:2px solid #ece8f5;border-radius:14px;font-size:18px;outline:none}
 
+    .number-card{
+      margin-top:14px;
+      background:white;
+      border-radius:24px;
+      padding:28px 20px;
+      text-align:center;
+      box-shadow:0 6px 20px rgba(60,40,120,.08);
+    }
+    .number-label{color:#777184;font-size:14px;margin-bottom:10px}
+    .shopping-number{
+      font-size:42px;
+      font-weight:900;
+      color:#6c3ceb;
+      letter-spacing:.5px;
+    }
+    .number-chinese{
+      margin-top:10px;
+      color:#716b80;
+      font-size:18px;
+    }
+    .word-popup-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(30,25,50,.38);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      z-index:50;
+      padding:18px;
+    }
+    .word-popup-backdrop.show{display:flex}
+    .word-popup{
+      width:min(100%,520px);
+      background:white;
+      border-radius:24px;
+      padding:22px;
+      box-shadow:0 12px 40px rgba(30,20,70,.22);
+      animation:wordPopupIn .18s ease-out;
+    }
+    @keyframes wordPopupIn{
+      from{transform:translateY(18px);opacity:.5}
+      to{transform:translateY(0);opacity:1}
+    }
+    .word-popup-en{
+      font-size:30px;
+      font-weight:900;
+      color:#6c3ceb;
+    }
+    .word-popup-zh{
+      font-size:22px;
+      font-weight:800;
+      margin-top:8px;
+    }
+    .word-popup-note{
+      color:#777184;
+      margin-top:6px;
+      font-size:14px;
+    }
+    .word-tap.has-translation{
+      text-decoration:underline dotted #6c3ceb;
+      text-underline-offset:4px;
+    }
+
     .mic-permission {
       margin-top: 12px; padding: 14px 16px; border-radius: 16px;
       background: #f7f5ff; border: 1px solid #e7e0ff;
@@ -298,6 +361,15 @@
           <div class="icon">🔤</div>
           <h2>單字練習</h2>
           <p>單字讀法、KK 音標<br>聽發音與拼字練習</p>
+        </button>
+      </div>
+
+      <div class="section-title" style="margin-top:22px;">購物數字</div>
+      <div class="grid">
+        <button class="card orange" onclick="openShoppingNumbers()">
+          <div class="icon">🔢</div>
+          <h2>購物數字練習</h2>
+          <p>價格、數量、折扣、尺寸<br>練習購物時常用的英文數字</p>
         </button>
       </div>
 
@@ -371,7 +443,7 @@
 
         <div class="tip" style="background:#f3efff;">
           <strong>👆 小技巧</strong><br>
-          句子裡的<strong>每一個英文單字都可以單獨點擊發音</strong>。
+          句子裡的<strong>每一個英文單字都可以點擊</strong>，會顯示中文翻譯並單獨發音。
         </div>
 
         <div class="tip" style="background:#eef8ff;">
@@ -446,6 +518,48 @@
           <div id="wordFeedback" style="margin-top:10px;font-weight:800;"></div>
         </div>
         <button class="primary" style="width:100%;margin-top:14px;" onclick="nextWord()">下一個單字 ▶</button>
+      </div>
+    </main>
+  </section>
+
+
+  <section id="shoppingNumbers" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter">🔢 購物數字練習</span> · <span id="numberCounter">1 / 10</span></div>
+
+        <div class="tip" style="background:#fff7df;">
+          <strong id="numberScenario">商品價格</strong>
+          <div id="numberPrompt" style="margin-top:6px;">看數字，練習用英文說出來。</div>
+        </div>
+
+        <div class="number-card">
+          <div class="number-label">今天的數字</div>
+          <div class="shopping-number" id="shoppingNumber">$12.50</div>
+          <div class="number-chinese" id="numberChinese">十二美元五十美分</div>
+        </div>
+
+        <div class="actions" style="margin-top:14px;">
+          <button class="secondary" onclick="speakShoppingNumber()">🔊 聽英文</button>
+          <button class="secondary" onclick="revealShoppingNumber()">👀 顯示英文答案</button>
+        </div>
+
+        <div class="phonics-card">
+          <strong>✍️ 數字拼寫練習</strong>
+          <p style="color:#716b80;">把這個數字用英文輸入，例如：twelve dollars</p>
+          <input id="shoppingNumberAnswer" class="word-practice-input"
+                 placeholder="輸入英文數字">
+          <button class="secondary" style="width:100%;margin-top:10px;" onclick="checkShoppingNumber()">檢查</button>
+          <div id="shoppingNumberFeedback" style="margin-top:10px;font-weight:800;"></div>
+        </div>
+
+        <div class="tip" style="background:#eef8ff;">
+          💡 <strong>購物小提醒</strong><br>
+          價格、數量、折扣、尺寸都是購物時很常遇到的數字。
+        </div>
+
+        <button class="primary" style="width:100%;margin-top:14px;" onclick="nextShoppingNumber()">下一題 ▶</button>
       </div>
     </main>
   </section>
@@ -542,6 +656,19 @@
     <button onclick="openStats()">📊<br>記錄</button>
     <button onclick="openSettings()">⚙️<br>設定</button>
   </nav>
+</div>
+
+
+<div id="wordPopupBackdrop" class="word-popup-backdrop" onclick="closeWordPopup(event)">
+  <div class="word-popup" onclick="event.stopPropagation()">
+    <div class="word-popup-en" id="popupWord">table</div>
+    <div class="word-popup-zh" id="popupMeaning">桌子／餐桌</div>
+    <div class="word-popup-note" id="popupNote">點「🔊 聽發音」可以單獨聽這個單字。</div>
+    <div class="actions" style="margin-top:16px;">
+      <button class="primary" onclick="speakPopupWord()">🔊 聽發音</button>
+      <button class="secondary" onclick="closeWordPopup()">關閉</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -819,14 +946,169 @@
     window.scrollTo(0,0);
   }
 
+  const wordTranslations = {
+    "a": "一個／一件",
+    "again": "再一次",
+    "another": "另一個",
+    "any": "任何／一些",
+    "are": "是（複數）",
+    "arrive": "到達",
+    "at": "在／於",
+    "bag": "袋子",
+    "big": "大的",
+    "bill": "帳單",
+    "black": "黑色的",
+    "boarding": "登機",
+    "by": "用／透過",
+    "can": "可以／能夠",
+    "card": "卡片／信用卡",
+    "check": "辦理／檢查／結帳",
+    "colors": "顏色（複數）",
+    "connecting": "轉機中的／連接的",
+    "could": "可以／能否",
+    "day": "一天／日子",
+    "delayed": "延誤的",
+    "didn't": "沒有／未曾",
+    "discount": "折扣",
+    "dish": "菜餚",
+    "do": "做／助動詞",
+    "does": "做／助動詞",
+    "don't": "不要／不",
+    "duty": "職責；duty-free 為免稅的",
+    "duty-free": "免稅的",
+    "excuse": "原諒／打擾",
+    "fitting": "試穿用的／合適的",
+    "flight": "航班",
+    "food": "食物",
+    "for": "給／為了",
+    "free": "免費的",
+    "gate": "登機門",
+    "get": "得到／拿到",
+    "give": "給",
+    "go": "去",
+    "have": "有／擁有",
+    "help": "幫助",
+    "here's": "這是／這裡有",
+    "how": "如何／怎麼",
+    "i": "我",
+    "i'd": "我想要／我會",
+    "i'll": "我會／我要",
+    "i'm": "我是／我正在",
+    "in": "在……裡面",
+    "is": "是",
+    "it": "它／這件事",
+    "just": "只是／剛剛",
+    "larger": "更大的",
+    "less": "較少／少一點",
+    "like": "喜歡／想要",
+    "long": "長的／久的",
+    "looking": "尋找中的",
+    "luggage": "行李",
+    "may": "可以／可能",
+    "me": "我（受詞）",
+    "menu": "菜單",
+    "more": "更多",
+    "much": "很多／多少",
+    "my": "我的",
+    "name": "名字",
+    "need": "需要",
+    "nice": "好的／美好的",
+    "no": "不／沒有",
+    "of": "……的",
+    "on": "在……上／正在",
+    "one": "一／一個",
+    "other": "其他的",
+    "pair": "一雙／一對",
+    "pass": "通過",
+    "passport": "護照",
+    "pay": "付款",
+    "people": "人們／人",
+    "plane": "飛機",
+    "please": "請",
+    "problem": "問題",
+    "ready": "準備好了",
+    "recommendations": "推薦／建議",
+    "reservation": "預約／訂位",
+    "restroom": "洗手間",
+    "return": "退回／退貨",
+    "room": "房間",
+    "sale": "特價／折扣",
+    "say": "說",
+    "seafood": "海鮮",
+    "seven": "七",
+    "shoes": "鞋子",
+    "shop": "商店／購物",
+    "size": "尺寸",
+    "slowly": "慢慢地",
+    "small": "小的",
+    "smaller": "更小的",
+    "some": "一些",
+    "speak": "說話",
+    "spicy": "辣的",
+    "start": "開始",
+    "table": "桌子／餐桌",
+    "take": "拿／帶",
+    "thank": "感謝",
+    "that": "那個／那",
+    "the": "這個／那個（定冠詞）",
+    "there": "那裡",
+    "this": "這個／這件",
+    "time": "時間",
+    "to": "到／向",
+    "too": "太／也",
+    "try": "試試／嘗試",
+    "two": "二／兩個",
+    "understand": "了解／明白",
+    "us": "我們（受詞）",
+    "wait": "等待",
+    "wang": "王（姓名）",
+    "was": "是（過去式）",
+    "water": "水",
+    "we": "我們",
+    "we'd": "我們想要／我們會",
+    "we're": "我們是／我們正在",
+    "what": "什麼",
+    "where": "哪裡",
+    "which": "哪一個",
+    "you": "你／你們",
+    "your": "你的／你們的",
+    "delicious": "美味的"
+  };
+
+  let popupWordText = "";
+
+  function showWordTranslation(word) {
+    const key = word.toLowerCase().trim();
+    const meaning = wordTranslations[key] || "這個單字的中文翻譯";
+    popupWordText = word;
+    document.getElementById("popupWord").textContent = word;
+    document.getElementById("popupMeaning").textContent = meaning;
+    document.getElementById("popupNote").textContent = "點「🔊 聽發音」可以單獨聽這個單字。";
+    document.getElementById("wordPopupBackdrop").classList.add("show");
+    speakText(word);
+  }
+
+  function speakPopupWord() {
+    if (popupWordText) speakText(popupWordText);
+  }
+
+  function closeWordPopup(event) {
+    if (event && event.target && event.target.id !== "wordPopupBackdrop") return;
+    document.getElementById("wordPopupBackdrop").classList.remove("show");
+  }
+
   function renderClickableSentence(sentence){
     const box=document.getElementById("en"); box.innerHTML="";
     sentence.split(/(\s+)/).forEach(part=>{
       if(/^\s+$/.test(part)){box.appendChild(document.createTextNode(part));return;}
       const clean=part.replace(/^[^A-Za-z]+|[^A-Za-z\'-]+$/g,"");
       if(!clean){box.appendChild(document.createTextNode(part));return;}
-      const b=document.createElement("button"); b.className="word-tap"; b.textContent=part;
-      b.title="點一下聽這個單字"; b.onclick=e=>{e.stopPropagation();speakText(clean)};
+      const key=clean.toLowerCase();
+      const b=document.createElement("button");
+      b.className="word-tap" + (wordTranslations[key] ? " has-translation" : "");
+      b.textContent=part;
+      b.title="點一下：看中文翻譯＋聽發音";
+      b.onclick=e=>{e.stopPropagation();showWordTranslation(clean)};
       box.appendChild(b);
     });
   }
@@ -1014,6 +1296,105 @@
     else{f.textContent="🟡 再試一次。";f.style.color="#8a5a11";playResultSound(false);}
   }
   function nextWord(){currentWordIndex=(currentWordIndex+1)%wordBank.length;renderWord();}
+
+
+  const shoppingNumberBank = [
+    {type:"price", display:"$5", zh:"五美元", en:"five dollars"},
+    {type:"price", display:"$12.50", zh:"十二美元五十美分", en:"twelve dollars and fifty cents"},
+    {type:"price", display:"$20", zh:"二十美元", en:"twenty dollars"},
+    {type:"price", display:"$35.99", zh:"三十五美元九十九美分", en:"thirty-five dollars and ninety-nine cents"},
+    {type:"quantity", display:"3", zh:"三個", en:"three"},
+    {type:"quantity", display:"8", zh:"八個", en:"eight"},
+    {type:"quantity", display:"12", zh:"十二個", en:"twelve"},
+    {type:"discount", display:"10%", zh:"百分之十", en:"ten percent"},
+    {type:"discount", display:"20%", zh:"百分之二十", en:"twenty percent"},
+    {type:"discount", display:"50%", zh:"百分之五十", en:"fifty percent"},
+    {type:"size", display:"38", zh:"三十八號／尺寸三十八", en:"thirty-eight"},
+    {type:"size", display:"42", zh:"四十二號／尺寸四十二", en:"forty-two"}
+  ];
+
+  let shoppingNumberQuestions = [];
+  let shoppingNumberIndex = 0;
+  let shoppingNumberAnswered = false;
+
+  function openShoppingNumbers(){
+    shoppingNumberQuestions = shuffle(shoppingNumberBank).slice(0, 10);
+    shoppingNumberIndex = 0;
+    shoppingNumberAnswered = false;
+    document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+    document.getElementById("shoppingNumbers").classList.add("active");
+    renderShoppingNumber();
+    window.scrollTo(0,0);
+  }
+
+  function renderShoppingNumber(){
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    if(!q) return;
+    shoppingNumberAnswered=false;
+    document.getElementById("numberCounter").textContent=`${shoppingNumberIndex+1} / ${shoppingNumberQuestions.length}`;
+    document.getElementById("shoppingNumber").textContent=q.display;
+    document.getElementById("numberChinese").textContent=q.zh;
+    document.getElementById("shoppingNumberAnswer").value="";
+    document.getElementById("shoppingNumberFeedback").textContent="";
+    document.getElementById("shoppingNumberFeedback").style.color="";
+    document.getElementById("shoppingNumberFeedback").dataset.answer=q.en;
+    document.getElementById("numberScenario").textContent=
+      q.type==="price" ? "💰 商品價格" :
+      q.type==="quantity" ? "🛒 商品數量" :
+      q.type==="discount" ? "🏷️ 折扣" : "👕 商品尺寸";
+    document.getElementById("numberPrompt").textContent=
+      q.type==="price" ? "看到價格，用英文說出來。" :
+      q.type==="quantity" ? "看到數量，用英文說出來。" :
+      q.type==="discount" ? "看到折扣，用英文說出來。" : "看到尺寸數字，用英文說出來。";
+  }
+
+  function normalizeNumberAnswer(s){
+    return s.toLowerCase().trim()
+      .replace(/[.,!?]/g,"")
+      .replace(/\\s+/g," ");
+  }
+
+  function speakShoppingNumber(){
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    if(q) speakText(q.en);
+  }
+
+  function revealShoppingNumber(){
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    if(!q) return;
+    document.getElementById("shoppingNumberFeedback").textContent=`英文答案：${q.en}`;
+    document.getElementById("shoppingNumberFeedback").style.color="#5630c7";
+    speakText(q.en);
+  }
+
+  function checkShoppingNumber(){
+    if(shoppingNumberAnswered) return;
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    const answer=normalizeNumberAnswer(document.getElementById("shoppingNumberAnswer").value);
+    const target=normalizeNumberAnswer(q.en);
+    const feedback=document.getElementById("shoppingNumberFeedback");
+    shoppingNumberAnswered=true;
+
+    if(answer===target){
+      feedback.textContent="🟢 答對了！";
+      feedback.style.color="#237a44";
+      playResultSound(true);
+    }else{
+      feedback.textContent=`🟡 再試一次。答案是：${q.en}`;
+      feedback.style.color="#8a5a11";
+      playResultSound(false);
+    }
+  }
+
+  function nextShoppingNumber(){
+    if(shoppingNumberIndex < shoppingNumberQuestions.length-1){
+      shoppingNumberIndex++;
+      renderShoppingNumber();
+    }else{
+      showToast("🎉 購物數字練習完成！");
+      setTimeout(goHome,800);
+    }
+  }
 
   let quizMode = "choice";
   let quizQuestions = [];
@@ -1491,6 +1872,10 @@
   updateLearningStatus();
   checkMicrophonePermission();
   updateHomeStats();
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") closeWordPopup();
+  });
 
   function showToast(message) {
     const toast = document.getElementById("toast");
