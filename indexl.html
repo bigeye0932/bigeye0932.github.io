@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6C3CEB" />
+  <title>英文學習 App - v9 完整保留版</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC",
+                   "Microsoft JhengHei", sans-serif;
+      background: #f7f5ff;
+      color: #25213b;
+    }
+    button { font: inherit; }
+    .app {
+      width: min(100%, 760px);
+      min-height: 100vh;
+      margin: 0 auto;
+      background: #f7f5ff;
+    }
+    header {
+      padding: 28px 22px 16px;
+      background: linear-gradient(135deg, #eee9ff, #faf9ff);
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .menu, .settings {
+      border: 0;
+      background: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(60, 40, 120, .10);
+      cursor: pointer;
+    }
+    h1 { margin: 0; font-size: 32px; }
+    .tagline { margin: 8px 0 0; font-size: 17px; color: #666078; }
+    main { padding: 18px 18px 90px; }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 10px 4px 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .card {
+      border: 0;
+      text-align: left;
+      padding: 20px;
+      min-height: 190px;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 6px 20px rgba(60, 40, 120, .10);
+      cursor: pointer;
+      transition: transform .15s ease;
+    }
+    .card:active { transform: scale(.98); }
+    .icon { font-size: 38px; margin-bottom: 12px; }
+    .card h2 { margin: 0 0 7px; font-size: 22px; }
+    .card p { margin: 0; color: #716b80; line-height: 1.45; }
+    .purple { background: #f0ebff; }
+    .orange { background: #fff2dc; }
+    .green { background: #eaf9f1; }
+    .blue { background: #eaf3ff; }
+    .progress {
+      margin-top: 18px;
+      background: white;
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 6px 20px rgba(60, 40, 120, .08);
+    }
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .bar {
+      height: 10px;
+      background: #ece8f5;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar > div {
+      width: 20%;
+      height: 100%;
+      background: #6c3ceb;
+      border-radius: 99px;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .back {
+      border: 0;
+      background: transparent;
+      font-size: 17px;
+      padding: 0 0 16px;
+      cursor: pointer;
+    }
+    .lesson {
+      background: white;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 6px 20px rgba(60, 40, 120, .08);
+    }
+    .counter { color: #6c3ceb; font-weight: 800; }
+    .zh { font-size: 23px; margin-top: 24px; }
+    .en { font-size: 26px; font-weight: 800; margin: 10px 0 20px; }
+    .actions { display: grid; gap: 10px; }
+    .primary, .secondary {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .primary { background: #6c3ceb; color: white; }
+    .secondary { background: #eee9ff; color: #5630c7; }
+    .tip {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #fff7df;
+      color: #685a30;
+      line-height: 1.5;
+    }
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(100%, 760px);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: rgba(255,255,255,.96);
+      border-top: 1px solid #ece9f3;
+      padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+      z-index: 10;
+    }
+    nav button {
+      border: 0;
+      background: transparent;
+      color: #777184;
+      padding: 7px 2px;
+      cursor: pointer;
+    }
+    nav button.active { color: #6c3ceb; font-weight: 800; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 90px;
+      transform: translateX(-50%);
+      background: #29233d;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 99px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+      z-index: 20;
+    }
+    .toast.show { opacity: 1; }
+    @media (max-width: 430px) {
+      h1 { font-size: 28px; }
+      .grid { gap: 10px; }
+      .card { padding: 16px; min-height: 170px; }
+      .card h2 { font-size: 20px; }
+    }
+
+    .stats-grid {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px;
+    }
+    .stat {
+      background:white; border-radius:18px; padding:14px 10px; text-align:center;
+      box-shadow:0 5px 16px rgba(60,40,120,.07);
+    }
+    .stat strong { display:block; font-size:22px; margin-bottom:3px; }
+    .stat span { color:#777184; font-size:13px; }
+    .choice-grid { display:grid; gap:10px; margin-top:18px; }
+    .choice {
+      border:2px solid #ece8f5; background:white; border-radius:16px; padding:15px;
+      text-align:left; cursor:pointer; font-weight:700;
+    }
+    .choice.correct { border-color:#48a868; background:#effaf2; }
+    .choice.wrong { border-color:#e0a23a; background:#fff8e8; }
+    .choice:disabled { cursor:default; }
+    .quiz-type {
+      display:flex; gap:8px; overflow:auto; margin:12px 0 16px; padding-bottom:2px;
+    }
+    .quiz-type button {
+      white-space:nowrap; border:0; border-radius:999px; padding:10px 14px;
+      background:#eee9ff; color:#5630c7; cursor:pointer; font-weight:700;
+    }
+    .quiz-type button.active { background:#6c3ceb; color:white; }
+    .flashcard {
+      min-height:210px; display:flex; flex-direction:column; justify-content:center;
+      align-items:center; text-align:center; background:white; border-radius:24px;
+      padding:25px; box-shadow:0 6px 20px rgba(60,40,120,.08); cursor:pointer;
+    }
+    .flashcard .small { color:#777184; font-size:14px; margin-bottom:12px; }
+    .flashcard .big { font-size:28px; font-weight:800; }
+    .word-bank {
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
+    }    .fill-edit-panel {
+      background:white; border-radius:18px; padding:16px; margin-top:14px;
+      box-shadow:0 5px 16px rgba(60,40,120,.06);
+    }
+    .fill-edit-title { font-weight:800; margin-bottom:10px; }
+    .fill-edit-input {
+      width:100%; min-height:80px; box-sizing:border-box; resize:vertical;
+      border:2px solid #ece8f5; border-radius:14px; padding:12px;
+      font-size:17px; line-height:1.5; font-family:inherit; outline:none;
+    }
+    .fill-edit-input:focus { border-color:#8d72e8; }
+    .fill-edit-actions { display:flex; gap:8px; margin-top:9px; }
+    .fill-edit-actions button { flex:1; }
+    .fill-feedback { min-height:24px; margin-top:10px; font-weight:800; }
+
+    .word {
+      border:0; background:#eee9ff; color:#5630c7; border-radius:12px; padding:10px 12px;
+      cursor:pointer; font-weight:700;
+    }
+    .record-list { display:grid; gap:10px; margin-top:14px; }
+    .record {
+      background:white; border-radius:17px; padding:15px; box-shadow:0 5px 16px rgba(60,40,120,.06);
+    }
+    .record .en { font-size:18px; margin:5px 0; }
+    .pill { display:inline-block; padding:5px 9px; border-radius:999px; font-size:12px; font-weight:800; }
+    .pill.green { background:#e8f7ee; color:#237a44; }
+    .pill.orange { background:#fff1d8; color:#8a5a11; }
+    .settings-row {
+      background:white; border-radius:18px; padding:16px; margin-top:10px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .switch { width:52px; height:30px; border:0; border-radius:99px; background:#ccc; cursor:pointer; position:relative; }
+    .switch.on { background:#6c3ceb; }
+    .switch:after { content:""; width:24px; height:24px; border-radius:50%; background:white; position:absolute; top:3px; left:3px; transition:.2s; }
+    .switch.on:after { left:25px; }
+    @media (max-width:430px) { .stats-grid{gap:7px}.stat{padding:12px 6px}.stat strong{font-size:19px} }
+
+  
+    .word-tap{border:0;background:transparent;padding:2px 3px;margin:0 1px;color:inherit;font:inherit;font-weight:inherit;cursor:pointer;border-radius:6px;text-decoration:underline dotted #8d7bd8}
+    .word-tap:hover{background:#f0ebff}
+    .phonics-card{background:white;border-radius:20px;padding:20px;margin-top:14px;box-shadow:0 5px 16px rgba(60,40,120,.07)}
+    .phonetic{font-size:28px;font-weight:800;color:#6c3ceb;margin:8px 0}
+    .syllables{color:#716b80;margin-bottom:12px}
+    .word-practice-input{width:100%;padding:13px;border:2px solid #ece8f5;border-radius:14px;font-size:18px;outline:none}
+
+    .number-card{
+      margin-top:14px;
+      background:white;
+      border-radius:24px;
+      padding:28px 20px;
+      text-align:center;
+      box-shadow:0 6px 20px rgba(60,40,120,.08);
+    }
+    .number-label{color:#777184;font-size:14px;margin-bottom:10px}
+    .shopping-number{
+      font-size:42px;
+      font-weight:900;
+      color:#6c3ceb;
+      letter-spacing:.5px;
+    }
+    .number-chinese{
+      margin-top:10px;
+      color:#716b80;
+      font-size:18px;
+    }
+    .word-popup-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(30,25,50,.38);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      z-index:50;
+      padding:18px;
+    }
+    .word-popup-backdrop.show{display:flex}
+    .word-popup{
+      width:min(100%,520px);
+      background:white;
+      border-radius:24px;
+      padding:22px;
+      box-shadow:0 12px 40px rgba(30,20,70,.22);
+      animation:wordPopupIn .18s ease-out;
+    }
+    @keyframes wordPopupIn{
+      from{transform:translateY(18px);opacity:.5}
+      to{transform:translateY(0);opacity:1}
+    }
+    .word-popup-en{
+      font-size:30px;
+      font-weight:900;
+      color:#6c3ceb;
+    }
+    .word-popup-zh{
+      font-size:22px;
+      font-weight:800;
+      margin-top:8px;
+    }
+    .word-popup-note{
+      color:#777184;
+      margin-top:6px;
+      font-size:14px;
+    }
+    .word-tap.has-translation{
+      text-decoration:underline dotted #6c3ceb;
+      text-underline-offset:4px;
+    }
+
+    .mic-permission {
+      margin-top: 12px; padding: 14px 16px; border-radius: 16px;
+      background: #f7f5ff; border: 1px solid #e7e0ff;
+    }
+    .mic-status { font-weight: 800; margin-bottom: 5px; }
+    .mic-status.granted { color:#237a44; }
+    .mic-status.denied { color:#a34b38; }
+    .mic-status.unknown { color:#6c3ceb; }
+    .mic-help { color:#716b80; font-size:14px; line-height:1.5; margin:0; }
+  
+    .word-popup-kk{margin-top:8px;color:#6c3ceb;font-size:20px;font-weight:800;letter-spacing:.2px}
+      .today-start-card{background:linear-gradient(135deg,#6c3ceb,#8a63ef);color:white;border-radius:24px;padding:24px 20px;margin-bottom:18px;box-shadow:0 10px 28px rgba(108,60,235,.22)}
+    .today-start-card h2{margin:6px 0;font-size:25px}.today-start-card p{margin:6px 0;color:rgba(255,255,255,.9)}
+    .today-start-button{width:100%;border:0;border-radius:16px;padding:14px;background:white;color:#5630c7;font-size:17px;font-weight:900;margin-top:14px;cursor:pointer}
+    .flow-steps{display:flex;gap:7px;margin:14px 0 18px}.flow-step{flex:1;height:7px;border-radius:99px;background:#e9e4f4}.flow-step.active{background:#6c3ceb}.flow-step.done{background:#55ad73}
+    .flow-label{font-size:13px;color:#777184;text-align:center;margin-top:6px}.flow-stage{background:white;border-radius:22px;padding:20px;box-shadow:0 6px 20px rgba(60,40,120,.07)}
+    .flow-stage-title{font-size:20px;font-weight:900;margin-bottom:8px}.flow-sentence{font-size:25px;font-weight:850;line-height:1.45;margin:15px 0}.flow-translation{font-size:18px;color:#716b80}
+    .speech-score{text-align:center;background:#f3efff;border-radius:18px;padding:18px;margin-top:14px}.speech-score-number{font-size:38px;font-weight:900;color:#6c3ceb}
+    .flow-choice-grid{display:grid;gap:10px;margin-top:14px}.flow-choice{border:2px solid #ece8f5;background:white;border-radius:15px;padding:14px;text-align:left;font-weight:750;cursor:pointer}.flow-choice.correct{border-color:#48a868;background:#effaf2}.flow-choice.wrong{border-color:#e0a23a;background:#fff8e8}
+    .flow-complete{text-align:center;background:white;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(60,40,120,.07)}
+  </style>
+</head>
+<body>
+<div class="app">
+  <section id="home" class="page active">
+    <header>
+      <div class="top">
+        <button class="menu" onclick="showToast('選單功能之後再加入')">☰</button>
+        <button class="settings" onclick="showToast('設定功能之後再加入')">⚙️</button>
+      </div>
+      <h1>Good evening! 🌙</h1>
+      <p class="tagline">每天 5 分鐘，從不敢說，到敢開口！</p>
+    </header>
+
+    <main>
+      <div class="today-start-card"><div style="font-size:14px;">⏱️ 今天 5 分鐘</div><h2>今天就學 5 句英文</h2><p>每句都會：聽 → 說 → 選 → 填</p><button class="today-start-button" onclick="openTodayFlow()">▶ 開始今日學習</button></div>
+
+      <div class="section-title">今天想學什麼？</div>
+      <div class="grid">
+        <button class="card purple" onclick="openTodayFlow()">
+          <div class="icon">📅</div>
+          <h2>今日英文</h2>
+          <p>每天從 80 句題庫隨機挑 5 句<br>天天進步一點點</p>
+        </button>
+
+        <button class="card orange" onclick="openLesson('餐廳')">
+          <div class="icon">🍽️</div>
+          <h2>餐廳</h2>
+          <p>點餐、訂位、結帳<br>餐廳常用英文</p>
+        </button>
+
+        <button class="card green" onclick="openLesson('購物')">
+          <div class="icon">🛍️</div>
+          <h2>購物</h2>
+          <p>問價格、尺寸、顏色<br>購物必備英文</p>
+        </button>
+
+        <button class="card blue" onclick="openLesson('機場')">
+          <div class="icon">✈️</div>
+          <h2>機場</h2>
+          <p>報到、行李、登機<br>機場實用英文</p>
+        </button>
+      </div>
+
+
+      <div class="section-title" style="margin-top:22px;">單字發音</div>
+      <div class="grid">
+        <button class="card blue" onclick="openWordPractice()">
+          <div class="icon">🔤</div>
+          <h2>單字練習</h2>
+          <p>單字讀法、KK 音標<br>聽發音與拼字練習</p>
+        </button>
+      </div>
+
+      <div class="section-title" style="margin-top:22px;">購物數字</div>
+      <div class="grid">
+        <button class="card orange" onclick="openShoppingNumbers()">
+          <div class="icon">🔢</div>
+          <h2>購物數字練習</h2>
+          <p>價格、數量、折扣、尺寸<br>練習購物時常用的英文數字</p>
+        </button>
+      </div>
+
+      <div class="section-title" style="margin-top:22px;">更多練習</div>
+      <div class="grid">
+        <button class="card purple" onclick="openQuiz('choice')">
+          <div class="icon">📝</div>
+          <h2>選擇題</h2>
+          <p>測試你是否真的懂了</p>
+        </button>
+        <button class="card blue" onclick="openQuiz('listening')">
+          <div class="icon">🎧</div>
+          <h2>聽力練習</h2>
+          <p>聽英文，選出正確意思</p>
+        </button>
+        <button class="card green" onclick="openQuiz('fill')">
+          <div class="icon">✍️</div>
+          <h2>填空練習</h2>
+          <p>把英文句子拼完整</p>
+        </button>
+        <button class="card orange" onclick="openReview()">
+          <div class="icon">🔁</div>
+          <h2>錯題複習</h2>
+          <p>專門練習還不熟的句子</p>
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat"><strong id="homeLearned">0</strong><span>已學會</span></div>
+        <div class="stat"><strong id="homeReview">0</strong><span>待複習</span></div>
+        <div class="stat"><strong id="homeAccuracy">0%</strong><span>正確率</span></div>
+      </div>
+
+      <div class="progress">
+        <div class="progress-row">
+          <strong>🔥 連續學習</strong>
+          <strong id="homeStreak">1 天</strong>
+        </div>
+        <div class="bar"><div id="homeBar" style="width:0%;"></div></div>
+        <p id="homeProgressText" style="color:#777184;margin-bottom:0;">今天完成 0 / 5 句</p>
+        <p style="color:#777184;margin:7px 0 0;">累積學會 <strong id="homeLearned">0</strong> 句</p>
+      </div>
+    </main>
+  </section>
+
+  <section id="todayFlow" class="page"><main><button class="back" onclick="goHome()">← 回首頁</button><div class="lesson">
+<div><span class="counter">📅 今日 5 分鐘</span> · <span id="flowQuestionCounter">1 / 5</span></div>
+<div class="flow-steps"><div class="flow-step active" id="flowStep1"></div><div class="flow-step" id="flowStep2"></div><div class="flow-step" id="flowStep3"></div><div class="flow-step" id="flowStep4"></div></div>
+<div class="flow-label" id="flowStageLabel">① 聽一聽</div><div id="todayFlowArea"></div></div></main></section>
+
+  <section id="lesson" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter" id="lessonTitle">今日英文</span> · <span id="counter">1 / 5</span></div>
+        <div class="zh" id="zh">請問有位子嗎？</div>
+        <div class="en" id="en">Do you have a table?</div>
+
+        <div class="actions">
+          <button class="secondary" onclick="speakEnglish()">🔊 聽一次</button>
+          <button class="secondary" onclick="practiceSpeaking()">🎤 跟著說</button>
+          <button class="secondary" onclick="markCurrent(true)">✅ 我會了</button>
+          <button class="secondary" onclick="markCurrent(false)">🔁 明天再複習</button>
+          <button class="primary" onclick="nextLesson()">下一句 ▶</button>
+        </div>
+
+        <div class="tip">
+          💡 <strong>小提示</strong><br>
+          不用害怕說錯。先敢開口，再慢慢進步！
+        </div>
+
+        <div class="tip" style="background:#f2efff;">
+          📚 <strong>學習紀錄</strong>
+          <div id="learningStatus" style="margin-top:6px;">今天 0 / 5</div>
+        </div>
+
+        <div class="tip" style="background:#f3efff;">
+          <strong>👆 小技巧</strong><br>
+          句子裡的<strong>每一個英文單字都可以點擊</strong>，會顯示中文翻譯並單獨發音。
+        </div>
+
+        <div class="tip" style="background:#eef8ff;">
+          <strong>🎤 語音練習</strong>
+          <div id="speechResult" style="margin-top:8px;">第一次使用請先允許麥克風。</div>
+          <div id="speechFeedback" style="margin-top:6px;"></div>
+          <div class="mic-permission">
+            <div id="micStatus" class="mic-status unknown">🎤 麥克風權限：尚未確認</div>
+            <p id="micHelp" class="mic-help">按「跟著說」時會向瀏覽器請求一次麥克風權限。允許後，App 會記住已授權狀態。</p>
+            <button id="micPermissionButton" class="secondary" style="width:100%;margin-top:10px;" onclick="requestMicrophonePermission(true)">🎤 允許麥克風</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </section>
+
+
+  <section id="result" class="page">
+    <main>
+      <div class="lesson" style="text-align:center;">
+        <div style="font-size:56px;">🎉</div>
+        <h2 style="font-size:28px;margin:8px 0;">今天完成了！</h2>
+        <p style="color:#716b80;">你已經完成今天的英文練習</p>
+
+        <div class="grid" style="margin-top:20px;">
+          <div class="card purple" style="min-height:120px;text-align:center;">
+            <div style="font-size:30px;">🟢</div>
+            <h2 id="resultCorrect">0</h2>
+            <p>答對</p>
+          </div>
+          <div class="card orange" style="min-height:120px;text-align:center;">
+            <div style="font-size:30px;">🔁</div>
+            <h2 id="resultReview">0</h2>
+            <p>需要複習</p>
+          </div>
+        </div>
+
+        <div class="progress" style="margin-top:16px;text-align:left;">
+          <div class="progress-row">
+            <strong>🔥 連續學習</strong>
+            <strong id="streakValue">1 天</strong>
+          </div>
+          <p style="margin:8px 0 0;color:#716b80;">累積學會 <strong id="learnedValue">0</strong> 句</p>
+        </div>
+
+        <button class="primary" style="width:100%;margin-top:18px;" onclick="goHome()">
+          回首頁
+        </button>
+      </div>
+    </main>
+  </section>
+
+
+  <section id="wordPractice" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter">🔤 單字發音</span> · <span id="wordCounter">1 / 20</span></div>
+        <div class="zh" id="wordMeaning">請選一個單字</div>
+        <div class="en" id="wordTarget">table</div>
+        <div class="phonics-card">
+          <div class="small">KK 音標</div>
+          <div class="phonetic" id="wordKK">/ˈteɪbəl/</div>
+          <div class="syllables" id="wordSyllables">ta-ble · 2 音節</div>
+          <button class="primary" style="width:100%;" onclick="speakCurrentWord()">🔊 聽單字</button>
+        </div>
+        <div class="phonics-card">
+          <strong>✍️ 拼字練習</strong>
+          <p style="color:#716b80;">聽完後輸入你聽到的英文單字</p>
+          <input id="wordAnswer" class="word-practice-input" placeholder="輸入英文單字">
+          <button class="secondary" style="width:100%;margin-top:10px;" onclick="checkWordSpelling()">檢查</button>
+          <div id="wordFeedback" style="margin-top:10px;font-weight:800;"></div>
+        </div>
+        <button class="primary" style="width:100%;margin-top:14px;" onclick="nextWord()">下一個單字 ▶</button>
+      </div>
+    </main>
+  </section>
+
+
+  <section id="shoppingNumbers" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter">🔢 購物數字練習</span> · <span id="numberCounter">1 / 10</span></div>
+
+        <div class="tip" style="background:#fff7df;">
+          <strong id="numberScenario">商品價格</strong>
+          <div id="numberPrompt" style="margin-top:6px;">看數字，練習用英文說出來。</div>
+        </div>
+
+        <div class="number-card">
+          <div class="number-label">今天的數字</div>
+          <div class="shopping-number" id="shoppingNumber">$12.50</div>
+          <div class="number-chinese" id="numberChinese">十二美元五十美分</div>
+        </div>
+
+        <div class="actions" style="margin-top:14px;">
+          <button class="secondary" onclick="speakShoppingNumber()">🔊 聽英文</button>
+          <button class="secondary" onclick="revealShoppingNumber()">👀 顯示英文答案</button>
+        </div>
+
+        <div class="phonics-card">
+          <strong>✍️ 數字拼寫練習</strong>
+          <p style="color:#716b80;">把這個數字用英文輸入，例如：twelve dollars</p>
+          <input id="shoppingNumberAnswer" class="word-practice-input"
+                 placeholder="輸入英文數字">
+          <button class="secondary" style="width:100%;margin-top:10px;" onclick="checkShoppingNumber()">檢查</button>
+          <div id="shoppingNumberFeedback" style="margin-top:10px;font-weight:800;"></div>
+        </div>
+
+        <div class="tip" style="background:#eef8ff;">
+          💡 <strong>購物小提醒</strong><br>
+          價格、數量、折扣、尺寸都是購物時很常遇到的數字。
+        </div>
+
+        <button class="primary" style="width:100%;margin-top:14px;" onclick="nextShoppingNumber()">下一題 ▶</button>
+      </div>
+    </main>
+  </section>
+
+  <section id="quiz" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <div><span class="counter" id="quizTitle">選擇題</span> · <span id="quizCounter">1 / 5</span></div>
+        <div class="zh" id="quizQuestion">題目</div>
+        <div id="quizArea"></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="review" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <h2 style="margin-top:0;">🔁 錯題複習</h2>
+        <p style="color:#716b80;">這裡會集中顯示你還不熟的句子。</p>
+        <div id="reviewList" class="record-list"></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="stats" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <h2 style="margin-top:0;">📊 學習記錄</h2>
+        <div class="stats-grid">
+          <div class="stat"><strong id="statsLearned">0</strong><span>已學會</span></div>
+          <div class="stat"><strong id="statsReview">0</strong><span>待複習</span></div>
+          <div class="stat"><strong id="statsAccuracy">0%</strong><span>正確率</span></div>
+        </div>
+        <div class="progress" style="margin-top:14px;">
+          <div class="progress-row"><strong>題庫完成度</strong><strong id="statsCompletion">0%</strong></div>
+          <div class="bar"><div id="statsBar" style="width:0%;"></div></div>
+        </div>
+        <div class="record-list" id="statsRecords"></div>
+      </div>
+    </main>
+  </section>
+
+  <section id="settingsPage" class="page">
+    <main>
+      <button class="back" onclick="goHome()">← 回首頁</button>
+      <div class="lesson">
+        <h2 style="margin-top:0;">⚙️ 設定</h2>
+        <div class="settings-row">
+          <div><strong>🔊 答題音效</strong><br><small style="color:#777184;">答對／答錯播放提示音</small></div>
+          <button id="soundSwitch" class="switch on" onclick="toggleSound()"></button>
+        </div>
+        <div class="settings-row">
+          <div><strong>🔊 英文自動朗讀</strong><br><small style="color:#777184;">進入題目時自動播放英文</small></div>
+          <button id="autoSpeakSwitch" class="switch" onclick="toggleAutoSpeak()"></button>
+        </div>
+
+        <div class="settings-row">
+          <div>
+            <strong>🗣️ 老師發音</strong><br>
+            <small style="color:#777184;">預設為美式英文</small>
+          </div>
+          <select id="accentSelect" onchange="changeAccent(this.value)"
+                  style="padding:10px 12px;border:2px solid #ece8f5;border-radius:12px;background:white;font-weight:700;">
+            <option value="en-US">🇺🇸 美式英文</option>
+            <option value="en-GB">🇬🇧 英式英文</option>
+            <option value="en-AU">🇦🇺 澳洲英文</option>
+            <option value="en-CA">🇨🇦 加拿大英文</option>
+          </select>
+        </div>
+
+        <div class="settings-row" style="display:block;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><strong>🐢 語音速度</strong><br><small style="color:#777184;">調整英文朗讀速度</small></div>
+            <strong id="speedValue">0.8x</strong>
+          </div>
+          <input id="speedSlider" type="range" min="0.5" max="1.2" step="0.1" value="0.8"
+                 oninput="changeSpeechSpeed(this.value)"
+                 style="width:100%;margin-top:14px;">
+          <div style="display:flex;justify-content:space-between;color:#777184;font-size:12px;margin-top:4px;">
+            <span>慢</span><span>正常</span><span>快</span>
+          </div>
+        </div>
+        <button class="secondary" style="width:100%;margin-top:14px;" onclick="resetProgress()">重設學習紀錄</button>
+      </div>
+    </main>
+  </section>
+
+  <nav>
+    <button class="active" onclick="goHome()">🏠<br>首頁</button>
+    <button onclick="openQuiz('flashcard')">📖<br>學習</button>
+    <button onclick="openStats()">📊<br>記錄</button>
+    <button onclick="openSettings()">⚙️<br>設定</button>
+  </nav>
+</div>
+
+
+<div id="wordPopupBackdrop" class="word-popup-backdrop" onclick="closeWordPopup(event)">
+  <div class="word-popup" onclick="event.stopPropagation()">
+    <div class="word-popup-en" id="popupWord">table</div>
+    <div class="word-popup-zh" id="popupMeaning">桌子／餐桌</div><div class="word-popup-kk" id="popupKK">/ˈteɪbəl/</div>
+    <div class="word-popup-note" id="popupNote">點「🔊 聽發音」可以單獨聽這個單字。</div>
+    <div class="actions" style="margin-top:16px;">
+      <button class="primary" onclick="speakPopupWord()">🔊 聽發音</button>
+      <button class="secondary" onclick="closeWordPopup()">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const lessons = {
+    "今日英文": [
+      ["請問有位子嗎？", "Do you have a table?"],
+      ["我們兩位。", "For two people."],
+      ["可以給我菜單嗎？", "May I have the menu?"],
+      ["請問這是什麼？", "What is this?"],
+      ["結帳，謝謝。", "Check, please."],
+      ["請問洗手間在哪裡？", "Where is the restroom?"],
+      ["我不明白。", "I don't understand."],
+      ["請說慢一點。", "Please speak slowly."],
+      ["可以再說一次嗎？", "Could you say that again?"],
+      ["多少錢？", "How much is it?"],
+      ["我想要這個。", "I'd like this one."],
+      ["我不要袋子，謝謝。", "No bag, thank you."],
+      ["可以刷卡嗎？", "Can I pay by card?"],
+      ["我正在找這個。", "I'm looking for this."],
+      ["請問在哪裡？", "Where is it?"],
+      ["我可以試試看嗎？", "Can I try it?"],
+      ["沒問題。", "No problem."],
+      ["謝謝你的幫忙。", "Thank you for your help."],
+      ["不好意思。", "Excuse me."],
+      ["祝你有美好的一天。", "Have a nice day."]
+    ],
+    "餐廳": [
+      ["我們一共有七位。", "There are seven of us."],
+      ["請問有位子嗎？", "Do you have a table?"],
+      ["要等多久？", "How long is the wait?"],
+      ["我們可以等。", "We can wait."],
+      ["我們想要一張七人的桌子。", "We'd like a table for seven."],
+      ["我們有訂位。", "We have a reservation."],
+      ["我的名字是王。", "My name is Wang."],
+      ["可以給我們菜單嗎？", "Could we have the menu, please?"],
+      ["有推薦的嗎？", "Do you have any recommendations?"],
+      ["我想要這個。", "I'd like this one."],
+      ["不要辣。", "No spicy, please."],
+      ["少一點辣。", "Less spicy, please."],
+      ["可以再給我一些水嗎？", "Could we have some more water?"],
+      ["這道菜是什麼？", "What is this dish?"],
+      ["這裡面有海鮮嗎？", "Does this have seafood in it?"],
+      ["可以打包嗎？", "Can I get this to go?"],
+      ["我們準備好了。", "We're ready."],
+      ["可以買單嗎？", "Could we have the bill, please?"],
+      ["可以刷卡嗎？", "Can I pay by card?"],
+      ["謝謝，食物很好吃。", "Thank you. The food was delicious."]
+    ],
+    "購物": [
+      ["這個多少錢？", "How much is this?"],
+      ["有其他尺寸嗎？", "Do you have another size?"],
+      ["可以試穿嗎？", "Can I try this on?"],
+      ["有其他顏色嗎？", "Do you have other colors?"],
+      ["我買這個。", "I'll take this."],
+      ["這件有大一號嗎？", "Do you have this in a larger size?"],
+      ["這件有小一號嗎？", "Do you have this in a smaller size?"],
+      ["有黑色的嗎？", "Do you have this in black?"],
+      ["這個有折扣嗎？", "Is this on sale?"],
+      ["可以便宜一點嗎？", "Can you give me a discount?"],
+      ["我只是看看。", "I'm just looking."],
+      ["我在找一雙鞋。", "I'm looking for a pair of shoes."],
+      ["試衣間在哪裡？", "Where is the fitting room?"],
+      ["我可以試這件嗎？", "Can I try this on?"],
+      ["這個太大了。", "This is too big."],
+      ["這個太小了。", "This is too small."],
+      ["可以刷卡嗎？", "Can I pay by card?"],
+      ["可以退貨嗎？", "Can I return this?"],
+      ["請給我一個袋子。", "Could I have a bag, please?"],
+      ["謝謝。", "Thank you."]
+    ],
+    "機場": [
+      ["我要辦理登機。", "I'd like to check in."],
+      ["這是我的護照。", "Here's my passport."],
+      ["我的行李在哪裡？", "Where is my luggage?"],
+      ["登機門在哪裡？", "Where is the gate?"],
+      ["謝謝你的幫忙。", "Thank you for your help."],
+      ["我要去哪裡辦理登機？", "Where do I check in?"],
+      ["這是我的登機證。", "Here's my boarding pass."],
+      ["我有一件行李要托運。", "I have one bag to check."],
+      ["這個可以帶上飛機嗎？", "Can I take this on the plane?"],
+      ["登機時間是幾點？", "What time does boarding start?"],
+      ["我的航班在哪個登機門？", "Which gate is my flight at?"],
+      ["航班延誤了嗎？", "Is the flight delayed?"],
+      ["航班準時嗎？", "Is the flight on time?"],
+      ["洗手間在哪裡？", "Where is the restroom?"],
+      ["免稅店在哪裡？", "Where is the duty-free shop?"],
+      ["我要轉機。", "I have a connecting flight."],
+      ["我要去哪裡轉機？", "Where do I go for my connecting flight?"],
+      ["我的行李沒有到。", "My luggage didn't arrive."],
+      ["我需要幫忙。", "I need some help."],
+      ["謝謝。", "Thank you."]
+    ]
+  };
+
+  const STORAGE_KEY = "englishLearningProgressV1";
+  let currentCategory = "今日英文";
+  let currentIndex = 0;
+  let currentQuestions = [];
+
+  function loadProgress() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        learned: [],
+        failed: [],
+        daily: {}
+      };
+    } catch (e) {
+      return { learned: [], failed: [], daily: {} };
+    }
+  }
+
+  function saveProgress(progress) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function yesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function allQuestions() {
+    const pool = [];
+    Object.keys(lessons).forEach(category => {
+      lessons[category].forEach((item, index) => {
+        pool.push({
+          id: category + "_" + index,
+          category,
+          index,
+          zh: item[0],
+          en: item[1]
+        });
+      });
+    });
+    return pool;
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function createDailyQuestions() {
+    const progress = loadProgress();
+    const key = todayKey();
+    const yesterday = progress.daily[yesterdayKey()] || [];
+    const pool = allQuestions();
+
+    // 先放入昨天答錯的題目，確保隔天複習。
+    const failedYesterday = yesterday
+      .filter(id => progress.failed.includes(id))
+      .map(id => pool.find(q => q.id === id))
+      .filter(Boolean);
+
+    const yesterdayIds = new Set(yesterday);
+    const learnedIds = new Set(progress.learned);
+
+    // 其餘題目盡量避開昨天，並優先選尚未學會的。
+    let candidates = shuffle(pool.filter(q =>
+      !yesterdayIds.has(q.id) && !learnedIds.has(q.id)
+    ));
+
+    if (candidates.length < 5 - failedYesterday.length) {
+      candidates = shuffle(pool.filter(q =>
+        !yesterdayIds.has(q.id) &&
+        !failedYesterday.some(f => f.id === q.id)
+      ));
+    }
+
+    let selected = [...failedYesterday];
+    selected = selected.concat(candidates.slice(0, 5 - selected.length));
+
+    // 若仍不足 5 題，再從整個題庫補足。
+    if (selected.length < 5) {
+      const selectedIds = new Set(selected.map(q => q.id));
+      const extra = shuffle(pool.filter(q => !selectedIds.has(q.id)));
+      selected = selected.concat(extra.slice(0, 5 - selected.length));
+    }
+
+    progress.daily[key] = selected.map(q => q.id);
+    saveProgress(progress);
+    return selected;
+  }
+
+  function getDailyQuestions() {
+    const progress = loadProgress();
+    const key = todayKey();
+    const ids = progress.daily[key];
+    const pool = allQuestions();
+
+    if (ids && ids.length === 5) {
+      return ids.map(id => pool.find(q => q.id === id)).filter(Boolean);
+    }
+    return createDailyQuestions();
+  }
+
+  function recordResult(question, isCorrect) {
+    const progress = loadProgress();
+    const id = question.id;
+
+    progress.learned = progress.learned || [];
+    progress.failed = progress.failed || [];
+
+    if (isCorrect) {
+      if (!progress.learned.includes(id)) progress.learned.push(id);
+      progress.failed = progress.failed.filter(x => x !== id);
+    } else {
+      if (!progress.failed.includes(id)) progress.failed.push(id);
+      progress.learned = progress.learned.filter(x => x !== id);
+    }
+
+    saveProgress(progress);
+    updateLearningStatus();
+  }
+
+  function updateLearningStatus() {
+    const progress = loadProgress();
+    const today = progress.daily[todayKey()] || [];
+    const total = today.length || 5;
+    const learnedToday = today.filter(id => progress.learned.includes(id)).length;
+    const percent = Math.round((learnedToday / total) * 100);
+
+    const status = document.getElementById("learningStatus");
+    if (status) status.textContent = `今天 ${learnedToday} / ${total} 句完成`;
+
+    const homeProgress = document.getElementById("homeProgressText");
+    if (homeProgress) homeProgress.textContent = `今天完成 ${learnedToday} / ${total} 句`;
+
+    const homeBar = document.getElementById("homeBar");
+    if (homeBar) homeBar.style.width = percent + "%";
+
+    const homeStreak = document.getElementById("homeStreak");
+    if (homeStreak) homeStreak.textContent = calculateStreak() + " 天";
+
+    const homeLearned = document.getElementById("homeLearned");
+    if (homeLearned) homeLearned.textContent = progress.learned.length;
+    updateHomeStats();
+  }
+
+  function openLesson(category) {
+    if (category === "今日英文") {
+      currentCategory = category;
+      currentQuestions = getDailyQuestions();
+    } else {
+      currentCategory = category;
+      currentQuestions = lessons[category].map((item, index) => ({
+        id: category + "_" + index,
+        category,
+        index,
+        zh: item[0],
+        en: item[1]
+      }));
+    }
+
+    currentIndex = 0;
+    updateLesson();
+    document.getElementById("home").classList.remove("active");
+    document.getElementById("lesson").classList.add("active");
+    updateLearningStatus();
+    window.scrollTo(0,0);
+  }
+
+  const wordTranslations = {
+    "a": "一個／一件",
+    "again": "再一次",
+    "another": "另一個",
+    "any": "任何／一些",
+    "are": "是（複數）",
+    "arrive": "到達",
+    "at": "在／於",
+    "bag": "袋子",
+    "big": "大的",
+    "bill": "帳單",
+    "black": "黑色的",
+    "boarding": "登機",
+    "by": "用／透過",
+    "can": "可以／能夠",
+    "card": "卡片／信用卡",
+    "check": "辦理／檢查／結帳",
+    "colors": "顏色（複數）",
+    "connecting": "轉機中的／連接的",
+    "could": "可以／能否",
+    "day": "一天／日子",
+    "delayed": "延誤的",
+    "didn't": "沒有／未曾",
+    "discount": "折扣",
+    "dish": "菜餚",
+    "do": "做／助動詞",
+    "does": "做／助動詞",
+    "don't": "不要／不",
+    "duty": "職責；duty-free 為免稅的",
+    "duty-free": "免稅的",
+    "excuse": "原諒／打擾",
+    "fitting": "試穿用的／合適的",
+    "flight": "航班",
+    "food": "食物",
+    "for": "給／為了",
+    "free": "免費的",
+    "gate": "登機門",
+    "get": "得到／拿到",
+    "give": "給",
+    "go": "去",
+    "have": "有／擁有",
+    "help": "幫助",
+    "here's": "這是／這裡有",
+    "how": "如何／怎麼",
+    "i": "我",
+    "i'd": "我想要／我會",
+    "i'll": "我會／我要",
+    "i'm": "我是／我正在",
+    "in": "在……裡面",
+    "is": "是",
+    "it": "它／這件事",
+    "just": "只是／剛剛",
+    "larger": "更大的",
+    "less": "較少／少一點",
+    "like": "喜歡／想要",
+    "long": "長的／久的",
+    "looking": "尋找中的",
+    "luggage": "行李",
+    "may": "可以／可能",
+    "me": "我（受詞）",
+    "menu": "菜單",
+    "more": "更多",
+    "much": "很多／多少",
+    "my": "我的",
+    "name": "名字",
+    "need": "需要",
+    "nice": "好的／美好的",
+    "no": "不／沒有",
+    "of": "……的",
+    "on": "在……上／正在",
+    "one": "一／一個",
+    "other": "其他的",
+    "pair": "一雙／一對",
+    "pass": "通過",
+    "passport": "護照",
+    "pay": "付款",
+    "people": "人們／人",
+    "plane": "飛機",
+    "please": "請",
+    "problem": "問題",
+    "ready": "準備好了",
+    "recommendations": "推薦／建議",
+    "reservation": "預約／訂位",
+    "restroom": "洗手間",
+    "return": "退回／退貨",
+    "room": "房間",
+    "sale": "特價／折扣",
+    "say": "說",
+    "seafood": "海鮮",
+    "seven": "七",
+    "shoes": "鞋子",
+    "shop": "商店／購物",
+    "size": "尺寸",
+    "slowly": "慢慢地",
+    "small": "小的",
+    "smaller": "更小的",
+    "some": "一些",
+    "speak": "說話",
+    "spicy": "辣的",
+    "start": "開始",
+    "table": "桌子／餐桌",
+    "take": "拿／帶",
+    "thank": "感謝",
+    "that": "那個／那",
+    "the": "這個／那個（定冠詞）",
+    "there": "那裡",
+    "this": "這個／這件",
+    "time": "時間",
+    "to": "到／向",
+    "too": "太／也",
+    "try": "試試／嘗試",
+    "two": "二／兩個",
+    "understand": "了解／明白",
+    "us": "我們（受詞）",
+    "wait": "等待",
+    "wang": "王（姓名）",
+    "was": "是（過去式）",
+    "water": "水",
+    "we": "我們",
+    "we'd": "我們想要／我們會",
+    "we're": "我們是／我們正在",
+    "what": "什麼",
+    "where": "哪裡",
+    "which": "哪一個",
+    "you": "你／你們",
+    "your": "你的／你們的",
+    "delicious": "美味的"
+  };
+
+  const wordKK = {"do": "/duː/", "you": "/juː/", "have": "/hæv/", "a": "/ə/", "table": "/ˈteɪbəl/", "for": "/fɔr/", "two": "/tuː/", "people": "/ˈpiːpəl/", "may": "/meɪ/", "i": "/aɪ/", "the": "/ðə/", "menu": "/ˈmɛnjuː/", "what": "/wʌt/", "is": "/ɪz/", "this": "/ðɪs/", "check": "/tʃɛk/", "please": "/pliːz/", "where": "/wɛr/", "restroom": "/ˈrɛstˌruːm/", "understand": "/ˌʌndərˈstænd/", "don't": "/doʊnt/", "speak": "/spiːk/", "slowly": "/ˈsloʊli/", "could": "/kʊd/", "say": "/seɪ/", "that": "/ðæt/", "again": "/əˈɡɛn/", "how": "/haʊ/", "much": "/mʌtʃ/", "it": "/ɪt/", "i'd": "/aɪd/", "like": "/laɪk/", "one": "/wʌn/", "no": "/noʊ/", "bag": "/bæɡ/", "thank": "/θæŋk/", "your": "/jʊr/", "help": "/hɛlp/", "excuse": "/ɪkˈskjuːz/", "me": "/miː/", "we": "/wiː/", "there": "/ðɛr/", "are": "/ɑr/", "seven": "/ˈsɛvən/", "of": "/əv/", "us": "/ʌs/", "reservation": "/ˌrɛzərˈveɪʃən/", "my": "/maɪ/", "name": "/neɪm/", "wang": "/wɑːŋ/", "any": "/ˈɛni/", "recommendations": "/ˌrɛkəmenˈdeɪʃənz/", "spicy": "/ˈspaɪsi/", "less": "/lɛs/", "more": "/mɔr/", "water": "/ˈwɔtər/", "dish": "/dɪʃ/", "seafood": "/ˈsiːˌfuːd/", "does": "/dʌz/", "in": "/ɪn/", "to": "/tuː/", "get": "/ɡɛt/", "ready": "/ˈrɛdi/", "bill": "/bɪl/", "pay": "/peɪ/", "card": "/kɑrd/", "food": "/fuːd/", "delicious": "/dɪˈlɪʃəs/", "long": "/lɔŋ/", "wait": "/weɪt/", "we'd": "/wiːd/", "larger": "/ˈlɑrdʒər/", "smaller": "/ˈsmɔlər/", "black": "/blæk/", "on": "/ɑn/", "sale": "/seɪl/", "give": "/ɡɪv/", "discount": "/ˈdɪskaʊnt/", "just": "/dʒʌst/", "looking": "/ˈlʊkɪŋ/", "pair": "/pɛr/", "shoes": "/ʃuːz/", "fitting": "/ˈfɪtɪŋ/", "room": "/ruːm/", "try": "/traɪ/", "too": "/tuː/", "big": "/bɪɡ/", "small": "/smɔl/", "return": "/rɪˈtɜrn/", "airport": "/ˈɛrˌpɔrt/", "passport": "/ˈpæsˌpɔrt/", "luggage": "/ˈlʌɡɪdʒ/", "gate": "/ɡeɪt/", "boarding": "/ˈbɔrdɪŋ/", "flight": "/flaɪt/", "here's": "/hɪrz/", "which": "/wɪtʃ/", "delayed": "/dɪˈleɪd/", "time": "/taɪm/", "duty-free": "/ˌduːti ˈfriː/", "connecting": "/kəˈnɛktɪŋ/", "didn't": "/ˈdɪdənt/", "arrive": "/əˈraɪv/", "need": "/niːd/", "some": "/sʌm/", "shopping": "/ˈʃɑpɪŋ/", "size": "/saɪz/", "color": "/ˈkʌlər/", "colors": "/ˈkʌlərz/", "price": "/praɪs/", "can": "/kæn/", "will": "/wɪl/", "take": "/teɪk/", "another": "/əˈnʌðər/", "other": "/ˈʌðər/", "nice": "/naɪs/", "day": "/deɪ/", "problem": "/ˈprɑbləm/", "here": "/hɪr/", "i'm": "/aɪm/", "go": "/ɡoʊ/", "was": "/wʌz/", "three": "/θriː/", "four": "/fɔr/", "five": "/faɪv/", "six": "/sɪks/", "eight": "/eɪt/", "nine": "/naɪn/", "ten": "/tɛn/", "twelve": "/twɛlv/", "twenty": "/ˈtwɛnti/", "thirty-five": "/ˌθɜrti ˈfaɪv/", "ninety-nine": "/ˌnaɪnti ˈnaɪn/", "fifty": "/ˈfɪfti/", "percent": "/pərˈsɛnt/", "cents": "/sɛnts/", "dollars": "/ˈdɑlərz/", "and": "/ænd/", "thirty-eight": "/ˌθɜrti ˈeɪt/", "forty-two": "/ˌfɔrti ˈtuː/"};
+
+  let popupWordText = "";
+
+  function showWordTranslation(word) {
+    const key = word.toLowerCase().trim();
+    const meaning = wordTranslations[key] || "這個單字的中文翻譯";
+    const pronunciation = wordKK[key] || "KK 音標尚未建立";
+    popupWordText = word;
+    document.getElementById("popupWord").textContent = word;
+    document.getElementById("popupMeaning").textContent = meaning;
+    document.getElementById("popupKK").textContent = pronunciation;
+    document.getElementById("popupNote").textContent = "點「🔊 聽發音」可以單獨聽這個單字。";
+    document.getElementById("wordPopupBackdrop").classList.add("show");
+    speakText(word);
+  }
+
+  function speakPopupWord() {
+    if (popupWordText) speakText(popupWordText);
+  }
+
+  function closeWordPopup(event) {
+    if (event && event.target && event.target.id !== "wordPopupBackdrop") return;
+    document.getElementById("wordPopupBackdrop").classList.remove("show");
+  }
+
+  function renderClickableSentence(sentence){
+    const box=document.getElementById("en"); box.innerHTML="";
+    sentence.split(/(\s+)/).forEach(part=>{
+      if(/^\s+$/.test(part)){box.appendChild(document.createTextNode(part));return;}
+      const clean=part.replace(/^[^A-Za-z]+|[^A-Za-z\'-]+$/g,"");
+      if(!clean){box.appendChild(document.createTextNode(part));return;}
+      const key=clean.toLowerCase();
+      const b=document.createElement("button");
+      b.className="word-tap" + (wordTranslations[key] ? " has-translation" : "");
+      b.textContent=part;
+      b.title="點一下：看中文翻譯＋KK音標＋聽發音";
+      b.onclick=e=>{e.stopPropagation();showWordTranslation(clean)};
+      box.appendChild(b);
+    });
+  }
+
+  function updateLesson() {
+    const q = currentQuestions[currentIndex];
+    document.getElementById("lessonTitle").textContent = currentCategory;
+    document.getElementById("counter").textContent =
+      `${currentIndex + 1} / ${currentQuestions.length}`;
+    document.getElementById("zh").textContent = q.zh;
+    renderClickableSentence(q.en);
+    document.getElementById("speechResult").textContent =
+      micPermissionState === "granted" ? "按「跟著說」開始練習。" : "第一次使用請先允許麥克風。";
+    document.getElementById("speechFeedback").textContent = "";
+    checkMicrophonePermission();
+    if (autoSpeakEnabled) setTimeout(speakEnglish, 200);
+  }
+
+  function playResultSound(isCorrect) {
+    if (!soundEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+      osc.type = isCorrect ? "sine" : "square";
+
+      if (isCorrect) {
+        // 答對：清脆的兩段上升音
+        osc.frequency.setValueAtTime(660, now);
+        osc.frequency.setValueAtTime(880, now + 0.10);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.30);
+      } else {
+        // 答錯：短促、較低的提示音
+        osc.frequency.setValueAtTime(220, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.14, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+        osc.start(now);
+        osc.stop(now + 0.24);
+      }
+
+      setTimeout(() => {
+        try { ctx.close(); } catch (e) {}
+      }, 500);
+    } catch (e) {
+      // 某些瀏覽器限制自動播放時，忽略聲音即可，不影響學習功能。
+    }
+  }
+
+  function markCurrent(isCorrect) {
+    playResultSound(isCorrect);
+    if (currentCategory === "今日英文") {
+      const p = loadProgress();
+      p.attempts = (p.attempts || 0) + 1;
+      if (isCorrect) p.correctAnswers = (p.correctAnswers || 0) + 1;
+      saveProgress(p);
+      recordResult(currentQuestions[currentIndex], isCorrect);
+      updateHomeStats();
+    }
+    showToast(isCorrect ? "🟢 已記錄：學會了！" : "🟡 已記錄：明天再複習！");
+  }
+
+  function nextLesson() {
+    if (currentIndex < currentQuestions.length - 1) {
+      currentIndex++;
+      updateLesson();
+    } else if (currentCategory === "今日英文") {
+      showResultPage();
+    } else {
+      showToast("🎉 這個情境完成！");
+      setTimeout(goHome, 900);
+    }
+  }
+
+  function showResultPage() {
+    const progress = loadProgress();
+    const ids = progress.daily[todayKey()] || [];
+    const correct = ids.filter(id => progress.learned.includes(id)).length;
+    const review = ids.filter(id => progress.failed.includes(id)).length;
+
+    document.getElementById("resultCorrect").textContent = correct;
+    document.getElementById("resultReview").textContent = review;
+    document.getElementById("learnedValue").textContent = progress.learned.length;
+    document.getElementById("streakValue").textContent = calculateStreak() + " 天";
+
+    document.getElementById("lesson").classList.remove("active");
+    document.getElementById("home").classList.remove("active");
+    document.getElementById("result").classList.add("active");
+    updateLearningStatus();
+    window.scrollTo(0,0);
+  }
+
+  function calculateStreak() {
+    const progress = loadProgress();
+    const days = Object.keys(progress.daily || {}).sort().reverse();
+    if (!days.length) return 0;
+
+    let streak = 0;
+    let cursor = new Date();
+
+    for (const key of days) {
+      const expected = cursor.getFullYear() + "-" +
+        String(cursor.getMonth() + 1).padStart(2, "0") + "-" +
+        String(cursor.getDate()).padStart(2, "0");
+
+      if (key !== expected) break;
+
+      const ids = progress.daily[key] || [];
+      const done = ids.filter(id => progress.learned.includes(id)).length;
+
+      if (done === 0) break;
+
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return streak;
+  }
+
+  function goHome() {
+    document.getElementById("lesson").classList.remove("active");
+    document.getElementById("result").classList.remove("active");
+    document.getElementById("home").classList.add("active");
+    updateLearningStatus();
+    window.scrollTo(0,0);
+  }
+
+
+  const wordBank = [
+    {word:"table",meaning:"桌子／餐桌",kk:"/ˈteɪbəl/",syllables:"ta-ble · 2 音節"},
+    {word:"menu",meaning:"菜單",kk:"/ˈmɛnju/",syllables:"men-u · 2 音節"},
+    {word:"reservation",meaning:"預約／訂位",kk:"/ˌrɛzɚˈveʃən/",syllables:"res-er-va-tion · 4 音節"},
+    {word:"restaurant",meaning:"餐廳",kk:"/ˈrɛstəˌrɑnt/",syllables:"res-tau-rant · 3 音節"},
+    {word:"delicious",meaning:"美味的",kk:"/dɪˈlɪʃəs/",syllables:"de-li-cious · 3 音節"},
+    {word:"water",meaning:"水",kk:"/ˈwɔtɚ/",syllables:"wa-ter · 2 音節"},
+    {word:"airport",meaning:"機場",kk:"/ˈɛrˌpɔrt/",syllables:"air-port · 2 音節"},
+    {word:"passport",meaning:"護照",kk:"/ˈpæsˌpɔrt/",syllables:"pass-port · 2 音節"},
+    {word:"luggage",meaning:"行李",kk:"/ˈlʌɡɪdʒ/",syllables:"lug-gage · 2 音節"},
+    {word:"boarding",meaning:"登機",kk:"/ˈbɔrdɪŋ/",syllables:"board-ing · 2 音節"},
+    {word:"flight",meaning:"航班",kk:"/flaɪt/",syllables:"flight · 1 音節"},
+    {word:"gate",meaning:"登機門",kk:"/ɡeɪt/",syllables:"gate · 1 音節"},
+    {word:"shopping",meaning:"購物",kk:"/ˈʃɑpɪŋ/",syllables:"shop-ping · 2 音節"},
+    {word:"size",meaning:"尺寸",kk:"/saɪz/",syllables:"size · 1 音節"},
+    {word:"color",meaning:"顏色",kk:"/ˈkʌlər/",syllables:"col-or · 2 音節"},
+    {word:"discount",meaning:"折扣",kk:"/ˈdɪskaʊnt/",syllables:"dis-count · 2 音節"},
+    {word:"price",meaning:"價格",kk:"/praɪs/",syllables:"price · 1 音節"},
+    {word:"restroom",meaning:"洗手間",kk:"/ˈrɛstˌrum/",syllables:"rest-room · 2 音節"},
+    {word:"help",meaning:"幫助",kk:"/hɛlp/",syllables:"help · 1 音節"},
+    {word:"understand",meaning:"了解／明白",kk:"/ˌʌndɚˈstænd/",syllables:"un-der-stand · 3 音節"}
+  ];
+  let currentWordIndex=0;
+  function openWordPractice(){
+    currentWordIndex=Math.floor(Math.random()*wordBank.length);
+    document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+    document.getElementById("wordPractice").classList.add("active");
+    renderWord(); window.scrollTo(0,0);
+  }
+  function renderWord(){
+    const w=wordBank[currentWordIndex];
+    document.getElementById("wordCounter").textContent=`${currentWordIndex+1} / ${wordBank.length}`;
+    document.getElementById("wordMeaning").textContent=w.meaning;
+    document.getElementById("wordTarget").textContent=w.word;
+    document.getElementById("wordKK").textContent=w.kk;
+    document.getElementById("wordSyllables").textContent=w.syllables;
+    document.getElementById("wordAnswer").value="";
+    document.getElementById("wordFeedback").textContent="";
+  }
+  function speakCurrentWord(){ speakText(wordBank[currentWordIndex].word); }
+  function checkWordSpelling(){
+    const w=wordBank[currentWordIndex], answer=document.getElementById("wordAnswer").value.trim().toLowerCase();
+    const f=document.getElementById("wordFeedback");
+    if(answer===w.word){f.textContent="🟢 答對了！";f.style.color="#237a44";playResultSound(true);}
+    else{f.textContent="🟡 再試一次。";f.style.color="#8a5a11";playResultSound(false);}
+  }
+  function nextWord(){currentWordIndex=(currentWordIndex+1)%wordBank.length;renderWord();}
+
+
+  const shoppingNumberBank = [
+    {type:"price", display:"$5", zh:"五美元", en:"five dollars"},
+    {type:"price", display:"$12.50", zh:"十二美元五十美分", en:"twelve dollars and fifty cents"},
+    {type:"price", display:"$20", zh:"二十美元", en:"twenty dollars"},
+    {type:"price", display:"$35.99", zh:"三十五美元九十九美分", en:"thirty-five dollars and ninety-nine cents"},
+    {type:"quantity", display:"3", zh:"三個", en:"three"},
+    {type:"quantity", display:"8", zh:"八個", en:"eight"},
+    {type:"quantity", display:"12", zh:"十二個", en:"twelve"},
+    {type:"discount", display:"10%", zh:"百分之十", en:"ten percent"},
+    {type:"discount", display:"20%", zh:"百分之二十", en:"twenty percent"},
+    {type:"discount", display:"50%", zh:"百分之五十", en:"fifty percent"},
+    {type:"size", display:"38", zh:"三十八號／尺寸三十八", en:"thirty-eight"},
+    {type:"size", display:"42", zh:"四十二號／尺寸四十二", en:"forty-two"}
+  ];
+
+  let shoppingNumberQuestions = [];
+  let shoppingNumberIndex = 0;
+  let shoppingNumberAnswered = false;
+
+  function openShoppingNumbers(){
+    shoppingNumberQuestions = shuffle(shoppingNumberBank).slice(0, 10);
+    shoppingNumberIndex = 0;
+    shoppingNumberAnswered = false;
+    document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+    document.getElementById("shoppingNumbers").classList.add("active");
+    renderShoppingNumber();
+    window.scrollTo(0,0);
+  }
+
+  function renderShoppingNumber(){
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    if(!q) return;
+    shoppingNumberAnswered=false;
+    document.getElementById("numberCounter").textContent=`${shoppingNumberIndex+1} / ${shoppingNumberQuestions.length}`;
+    document.getElementById("shoppingNumber").textContent=q.display;
+    document.getElementById("numberChinese").textContent=q.zh;
+    document.getElementById("shoppingNumberAnswer").value="";
+    document.getElementById("shoppingNumberFeedback").textContent="";
+    document.getElementById("shoppingNumberFeedback").style.color="";
+    document.getElementById("shoppingNumberFeedback").dataset.answer=q.en;
+    document.getElementById("numberScenario").textContent=
+      q.type==="price" ? "💰 商品價格" :
+      q.type==="quantity" ? "🛒 商品數量" :
+      q.type==="discount" ? "🏷️ 折扣" : "👕 商品尺寸";
+    document.getElementById("numberPrompt").textContent=
+      q.type==="price" ? "看到價格，用英文說出來。" :
+      q.type==="quantity" ? "看到數量，用英文說出來。" :
+      q.type==="discount" ? "看到折扣，用英文說出來。" : "看到尺寸數字，用英文說出來。";
+  }
+
+  function normalizeNumberAnswer(s){
+    return s.toLowerCase().trim()
+      .replace(/[.,!?]/g,"")
+      .replace(/\\s+/g," ");
+  }
+
+  function speakShoppingNumber(){
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    if(q) speakText(q.en);
+  }
+
+  function revealShoppingNumber(){
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    if(!q) return;
+    document.getElementById("shoppingNumberFeedback").textContent=`英文答案：${q.en}`;
+    document.getElementById("shoppingNumberFeedback").style.color="#5630c7";
+    speakText(q.en);
+  }
+
+  function checkShoppingNumber(){
+    if(shoppingNumberAnswered) return;
+    const q=shoppingNumberQuestions[shoppingNumberIndex];
+    const answer=normalizeNumberAnswer(document.getElementById("shoppingNumberAnswer").value);
+    const target=normalizeNumberAnswer(q.en);
+    const feedback=document.getElementById("shoppingNumberFeedback");
+    shoppingNumberAnswered=true;
+
+    if(answer===target){
+      feedback.textContent="🟢 答對了！";
+      feedback.style.color="#237a44";
+      playResultSound(true);
+    }else{
+      feedback.textContent=`🟡 再試一次。答案是：${q.en}`;
+      feedback.style.color="#8a5a11";
+      playResultSound(false);
+    }
+  }
+
+  function nextShoppingNumber(){
+    if(shoppingNumberIndex < shoppingNumberQuestions.length-1){
+      shoppingNumberIndex++;
+      renderShoppingNumber();
+    }else{
+      showToast("🎉 購物數字練習完成！");
+      setTimeout(goHome,800);
+    }
+  }
+
+
+  let todayFlowQuestions=[],todayFlowIndex=0,todayFlowStage=0,todayFlowChoiceAnswered=false,todayFlowFillAnswered=false;
+  function openTodayFlow(){todayFlowQuestions=getDailyQuestions();todayFlowIndex=0;todayFlowStage=0;document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.getElementById("todayFlow").classList.add("active");renderTodayFlow();window.scrollTo(0,0)}
+  function updateFlowSteps(){const l=["① 聽一聽","② 跟著說","③ 小測驗","④ 填空"];document.getElementById("flowStageLabel").textContent=l[todayFlowStage];for(let i=1;i<=4;i++){let e=document.getElementById("flowStep"+i);e.className="flow-step";if(i-1<todayFlowStage)e.classList.add("done");if(i-1===todayFlowStage)e.classList.add("active")}}
+  function renderTodayFlow(){const q=todayFlowQuestions[todayFlowIndex];if(!q)return;document.getElementById("flowQuestionCounter").textContent=`${todayFlowIndex+1} / ${todayFlowQuestions.length}`;updateFlowSteps();const a=document.getElementById("todayFlowArea");
+    if(todayFlowStage===0){a.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">👂 先聽老師說</div><div class="flow-translation">${q.zh}</div><div class="flow-sentence" id="flowSentence"></div><button class="primary" style="width:100%;" onclick="speakTodayFlow()">🔊 聽一次</button><div class="tip" style="margin-top:12px;">💡 點句子裡的單字，可以看中文、KK 音標，也可以單獨發音。</div><button class="primary" style="width:100%;margin-top:12px;" onclick="nextFlowStage()">下一步：跟著說 ▶</button></div>`;renderFlowSentence(q.en);setTimeout(speakTodayFlow,250)}
+    else if(todayFlowStage===1){a.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">🎤 換你說</div><div class="flow-translation">${q.zh}</div><div class="flow-sentence">${q.en}</div><button class="secondary" style="width:100%;" onclick="speakTodayFlow()">🔊 老師示範</button><button class="primary" style="width:100%;margin-top:10px;" onclick="practiceTodaySpeaking()">🎤 開始跟著說</button><div id="flowSpeechResult" style="margin-top:12px;color:#716b80;"></div><div id="flowSpeechFeedback" style="margin-top:8px;font-weight:800;"></div><div id="flowSpeechScore"></div><button class="primary" style="width:100%;margin-top:12px;" onclick="nextFlowStage()">下一步：小測驗 ▶</button></div>`}
+    else if(todayFlowStage===2){todayFlowChoiceAnswered=false;const cs=shuffle([q,...shuffle(allQuestions().filter(x=>x.id!==q.id)).slice(0,2)]);a.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">📝 你真的懂了嗎？</div><div class="flow-translation">${q.en}</div><div class="flow-choice-grid" id="flowChoices"></div><div id="flowChoiceFeedback" style="margin-top:10px;font-weight:800;"></div><button id="flowChoiceNext" class="primary" style="width:100%;margin-top:12px;" onclick="nextFlowStage()" disabled>下一步：填空 ▶</button></div>`;const b=document.getElementById("flowChoices");cs.forEach(c=>{let x=document.createElement("button");x.className="flow-choice";x.textContent=c.zh;x.onclick=()=>answerFlowChoice(x,c.id===q.id);b.appendChild(x)})}
+    else{todayFlowFillAnswered=false;const ws=shuffle(q.en.replace(/[?.!,']/g,"").split(" "));a.innerHTML=`<div class="flow-stage"><div class="flow-stage-title">✍️ 最後自己組一次</div><div class="flow-translation">${q.zh}</div><div class="flashcard" style="min-height:100px;margin-top:12px;"><div class="small">把英文句子拼完整</div><div class="big" id="flowFillAnswer" style="font-size:21px;"></div></div><div class="word-bank" id="flowWordBank"></div><div class="fill-edit-panel"><div class="fill-edit-title">✏️ 可以修改</div><textarea id="flowFillEdit" class="fill-edit-input" placeholder="也可以直接輸入完整句子"></textarea><div class="fill-edit-actions"><button class="secondary" onclick="applyFlowEdit()">套用修改</button><button class="secondary" onclick="clearFlowEdit()">清除重填</button></div></div><div id="flowFillFeedback" class="fill-feedback"></div><button class="primary" style="width:100%;margin-top:12px;" onclick="checkFlowFill()">檢查答案</button></div>`;const b=document.getElementById("flowWordBank");ws.forEach(w=>{let x=document.createElement("button");x.className="word";x.textContent=w;x.onclick=()=>{let o=document.getElementById("flowFillAnswer");o.textContent+=(o.textContent?" ":"")+w;document.getElementById("flowFillEdit").value=o.textContent;x.disabled=true;x.style.opacity=".45"};b.appendChild(x)})}}
+  function renderFlowSentence(s){const b=document.getElementById("flowSentence");b.innerHTML="";s.split(/(\s+)/).forEach(p=>{if(/^\s+$/.test(p)){b.appendChild(document.createTextNode(p));return}let c=p.replace(/^[^A-Za-z]+|[^A-Za-z'-]+$/g,"");if(!c){b.appendChild(document.createTextNode(p));return}let x=document.createElement("button");x.className="word-tap";x.textContent=p;x.onclick=e=>{e.stopPropagation();showWordTranslation(c)};b.appendChild(x)})}
+  function speakTodayFlow(){let q=todayFlowQuestions[todayFlowIndex];if(q)speakText(q.en)}
+  function nextFlowStage(){if(todayFlowStage<3){todayFlowStage++;renderTodayFlow();window.scrollTo(0,0)}}
+  function answerFlowChoice(btn,ok){if(todayFlowChoiceAnswered)return;todayFlowChoiceAnswered=true;document.querySelectorAll("#flowChoices .flow-choice").forEach(x=>x.disabled=true);btn.classList.add(ok?"correct":"wrong");let f=document.getElementById("flowChoiceFeedback");f.textContent=ok?"🟢 答對了！":"🟡 再看一次中文意思。";f.style.color=ok?"#237a44":"#8a5a11";document.getElementById("flowChoiceNext").disabled=false;playResultSound(ok)}
+  function applyFlowEdit(){document.getElementById("flowFillAnswer").textContent=document.getElementById("flowFillEdit").value.trim()}
+  function clearFlowEdit(){document.getElementById("flowFillEdit").value="";document.getElementById("flowFillAnswer").textContent="";document.querySelectorAll("#flowWordBank .word").forEach(x=>{x.disabled=false;x.style.opacity="1"});document.getElementById("flowFillFeedback").textContent=""}
+  function checkFlowFill(){if(todayFlowFillAnswered)return;let q=todayFlowQuestions[todayFlowIndex],i=document.getElementById("flowFillEdit"),raw=(i.value||document.getElementById("flowFillAnswer").textContent||"").trim(),a=raw.toLowerCase().replace(/[?.!,']/g,"").replace(/\s+/g," ").trim(),t=q.en.toLowerCase().replace(/[?.!,']/g,"").replace(/\s+/g," ").trim(),ok=a===t,f=document.getElementById("flowFillFeedback");document.getElementById("flowFillAnswer").textContent=raw;i.value=raw;if(ok){todayFlowFillAnswered=true;f.textContent="🟢 完全正確！這一句學會了。";f.style.color="#237a44";recordResult(q,true);playResultSound(true);setTimeout(finishFlowSentence,500)}else{f.textContent="🟡 可以修改上面的句子，再檢查一次。";f.style.color="#8a5a11";playResultSound(false)}}
+  function finishFlowSentence(){if(todayFlowIndex<todayFlowQuestions.length-1){todayFlowIndex++;todayFlowStage=0;renderTodayFlow();window.scrollTo(0,0)}else showFlowComplete()}
+  function showFlowComplete(){let p=loadProgress();document.getElementById("todayFlowArea").innerHTML=`<div class="flow-complete"><div style="font-size:58px;">🎉</div><h2>今天 5 分鐘完成！</h2><p style="color:#716b80;">5 句英文全部完成。</p><div class="stats-grid"><div class="stat"><strong>${p.learned.length}</strong><span>累積學會</span></div><div class="stat"><strong>${p.failed.length}</strong><span>待複習</span></div><div class="stat"><strong>${calculateStreak()}</strong><span>連續天數</span></div></div><button class="primary" style="width:100%;margin-top:15px;" onclick="goHome()">回首頁</button><button class="secondary" style="width:100%;margin-top:9px;" onclick="openReview()">🔁 複習錯題</button></div>`}
+  function speechFlowScore(a,b){let A=a.toLowerCase().replace(/[^a-z0-9' ]/g,"").split(/\s+/),B=b.toLowerCase().replace(/[^a-z0-9' ]/g,"").split(/\s+/);let s=new Set(A),m=B.filter(x=>s.has(x)).length;return Math.round(m/B.length*100)}
+  async function practiceTodaySpeaking(){let SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){showToast("目前瀏覽器不支援語音辨識。");return}let ok=await requestMicrophonePermission(false);if(!ok)return;let q=todayFlowQuestions[todayFlowIndex];recognition=new SR();recognition.lang=accent||"en-US";recognition.interimResults=false;recognition.maxAlternatives=1;document.getElementById("flowSpeechFeedback").textContent="🎤 正在聽，請說完整句子……";recognition.onresult=e=>{let heard=e.results[0][0].transcript.trim(),score=speechFlowScore(heard,q.en);document.getElementById("flowSpeechResult").textContent=`你說：「${heard}」`;document.getElementById("flowSpeechScore").innerHTML=`<div class="speech-score"><div>發音接近度</div><div class="speech-score-number">${score}%</div></div>`;document.getElementById("flowSpeechFeedback").textContent=score>=90?"🟢 很棒！":"💡 再跟著老師說一次也可以。`};recognition.onerror=()=>showToast("沒有聽清楚，再試一次！");try{recognition.start()}catch(e){showToast("語音練習正在啟動，請稍候")}}
+  let quizMode = "choice";
+  let quizQuestions = [];
+  let quizIndex = 0;
+  let quizCorrect = 0;
+  let quizAnswered = false;
+  let flashRevealed = false;
+  let soundEnabled = true;
+  let autoSpeakEnabled = false;
+  let speechSpeed = 0.8;
+  let accent = "en-US";
+
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem("englishLearningSettingsV1")) || {}; }
+    catch(e) { return {}; }
+  }
+  function saveSettings(s) { localStorage.setItem("englishLearningSettingsV1", JSON.stringify(s)); }
+
+  function updateHomeStats() {
+    const p = loadProgress();
+    const pool = allQuestions();
+    const learned = p.learned.length;
+    const review = p.failed.length;
+    const attempts = p.attempts || 0;
+    const correct = p.correctAnswers || 0;
+    const accuracy = attempts ? Math.round(correct / attempts * 100) : 0;
+    const el = id => document.getElementById(id);
+    if (el("homeLearned")) el("homeLearned").textContent = learned;
+    if (el("homeReview")) el("homeReview").textContent = review;
+    if (el("homeAccuracy")) el("homeAccuracy").textContent = accuracy + "%";
+    if (el("statsLearned")) el("statsLearned").textContent = learned;
+    if (el("statsReview")) el("statsReview").textContent = review;
+    if (el("statsAccuracy")) el("statsAccuracy").textContent = accuracy + "%";
+    if (el("statsCompletion")) el("statsCompletion").textContent = Math.round(learned / pool.length * 100) + "%";
+    if (el("statsBar")) el("statsBar").style.width = Math.round(learned / pool.length * 100) + "%";
+  }
+
+  function recordQuizAnswer(question, isCorrect) {
+    const p = loadProgress();
+    p.attempts = (p.attempts || 0) + 1;
+    if (isCorrect) p.correctAnswers = (p.correctAnswers || 0) + 1;
+    recordResult(question, isCorrect);
+    saveProgress(p);
+    updateHomeStats();
+  }
+
+  function openQuiz(mode) {
+    quizMode = mode;
+    quizQuestions = getDailyQuestions();
+    quizIndex = 0;
+    quizCorrect = 0;
+    quizAnswered = false;
+    flashRevealed = false;
+
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("quiz").classList.add("active");
+    renderQuiz();
+    window.scrollTo(0,0);
+  }
+
+  function makeChoices(question) {
+    const pool = shuffle(allQuestions().filter(q => q.id !== question.id));
+    const choices = shuffle([question, ...pool.slice(0,3)]);
+    return choices;
+  }
+
+  function renderQuiz() {
+    const q = quizQuestions[quizIndex];
+    document.getElementById("quizTitle").textContent =
+      quizMode === "choice" ? "選擇題" :
+      quizMode === "listening" ? "聽力練習" :
+      quizMode === "fill" ? "填空練習" : "單字卡";
+    document.getElementById("quizCounter").textContent = `${quizIndex + 1} / ${quizQuestions.length}`;
+    document.getElementById("quizQuestion").textContent =
+      quizMode === "listening" ? "🔊 聽完英文後，選出正確中文意思" : q.zh;
+
+    const area = document.getElementById("quizArea");
+
+    if (quizMode === "choice") {
+      area.innerHTML = '<div class="choice-grid"></div>';
+      const box = area.querySelector(".choice-grid");
+      makeChoices(q).forEach(choice => {
+        const b = document.createElement("button");
+        b.className = "choice";
+        b.textContent = choice.en;
+        b.onclick = () => answerChoice(b, choice.id === q.id, q);
+        box.appendChild(b);
+      });
+    } else if (quizMode === "listening") {
+      area.innerHTML = `
+        <button class="primary" style="width:100%;" onclick="speakQuizText()">🔊 再聽一次</button>
+        <div class="choice-grid" id="listeningChoices"></div>`;
+      const box = document.getElementById("listeningChoices");
+      makeChoices(q).forEach(choice => {
+        const b = document.createElement("button");
+        b.className = "choice";
+        b.textContent = choice.zh;
+        b.onclick = () => answerChoice(b, choice.id === q.id, q);
+        box.appendChild(b);
+      });
+      setTimeout(speakQuizText, 250);
+    } else if (quizMode === "fill") {
+      const words = shuffle(q.en.replace(/[?.!,']/g,"").split(" "));
+      area.innerHTML = `
+        <div class="flashcard" style="min-height:120px;">
+          <div class="small">把下面的單字排成完整句子</div>
+          <div class="big" id="fillAnswer" style="font-size:22px;"></div>
+        </div>
+
+        <div class="word-bank" id="wordBank"></div>
+
+        <div class="fill-edit-panel">
+          <div class="fill-edit-title">✏️ 修改答案</div>
+          <textarea id="fillEditInput" class="fill-edit-input"
+            placeholder="也可以直接修改／重新輸入完整英文句子"></textarea>
+          <div class="fill-edit-actions">
+            <button class="secondary" onclick="applyFillEdit()">套用修改</button>
+            <button class="secondary" onclick="clearFillAnswer()">清除重填</button>
+          </div>
+        </div>
+
+        <div id="fillFeedback" class="fill-feedback"></div>
+        <button class="primary" style="width:100%;margin-top:14px;" onclick="checkFill()">檢查答案</button>`;
+      const bank = document.getElementById("wordBank");
+      words.forEach((word) => {
+        const b = document.createElement("button");
+        b.className = "word";
+        b.textContent = word;
+        b.onclick = () => {
+          if (quizAnswered) return;
+          const out = document.getElementById("fillAnswer");
+          out.textContent += (out.textContent ? " " : "") + word;
+          b.disabled = true;
+          b.style.opacity = ".45";
+          document.getElementById("fillEditInput").value = out.textContent;
+        };
+        bank.appendChild(b);
+      });
+    } else {
+      area.innerHTML = `
+        <div class="flashcard" onclick="revealFlashcard()">
+          <div class="small">點一下翻卡</div>
+          <div class="big" id="flashText">${q.zh}</div>
+          <div style="margin-top:14px;color:#777184;" id="flashHint">點一下看英文</div>
+        </div>
+        <div class="actions" style="margin-top:14px;">
+          <button class="secondary" onclick="speakQuizText()">🔊 聽英文</button>
+          <button class="primary" onclick="flashResult(true)">✅ 我會了</button>
+          <button class="secondary" onclick="flashResult(false)">🔁 再複習</button>
+        </div>`;
+    }
+  }
+
+  function answerChoice(button, correct, q) {
+    if (quizAnswered) return;
+    quizAnswered = true;
+    document.querySelectorAll("#quizArea .choice").forEach(b => b.disabled = true);
+    button.classList.add(correct ? "correct" : "wrong");
+    if (correct) quizCorrect++;
+    recordQuizAnswer(q, correct);
+    playResultSound(correct);
+    setTimeout(nextQuizQuestion, 700);
+  }
+
+  function applyFillEdit() {
+    if (quizAnswered) return;
+    const input = document.getElementById("fillEditInput");
+    const answer = input.value.trim();
+    document.getElementById("fillAnswer").textContent = answer;
+    document.querySelectorAll("#wordBank .word").forEach(b => {
+      b.disabled = true;
+      b.style.opacity = ".45";
+    });
+    showToast(answer ? "✏️ 已套用修改" : "請先輸入答案");
+  }
+
+  function clearFillAnswer() {
+    if (quizAnswered) return;
+    document.getElementById("fillAnswer").textContent = "";
+    document.getElementById("fillEditInput").value = "";
+    document.querySelectorAll("#wordBank .word").forEach(b => {
+      b.disabled = false;
+      b.style.opacity = "1";
+    });
+    document.getElementById("fillFeedback").textContent = "";
+  }
+
+  function checkFill() {
+    if (quizAnswered) return;
+    const q = quizQuestions[quizIndex];
+    const edited = document.getElementById("fillEditInput");
+    const visible = document.getElementById("fillAnswer");
+    const raw = (edited.value || visible.textContent || "").trim();
+    visible.textContent = raw;
+    edited.value = raw;
+
+    const typed = raw.toLowerCase().replace(/[?.!,']/g,"").replace(/\\s+/g," ").trim();
+    const target = q.en.trim().toLowerCase().replace(/[?.!,']/g,"").replace(/\\s+/g," ").trim();
+    const correct = typed === target;
+    const feedback = document.getElementById("fillFeedback");
+
+    if (correct) {
+      quizAnswered = true;
+      quizCorrect++;
+      recordQuizAnswer(q, true);
+      playResultSound(true);
+      feedback.textContent = "🟢 完全正確！";
+      feedback.style.color = "#237a44";
+      setTimeout(nextQuizQuestion, 800);
+    } else {
+      // 答錯時不要立刻跳下一題，讓使用者可以修改。
+      recordQuizAnswer(q, false);
+      playResultSound(false);
+      feedback.innerHTML = "🟡 還有一點需要修改，可以直接在上面的文字框修正。";
+      feedback.style.color = "#8a5a11";
+      showToast("✏️ 可以修改答案後再檢查");
+    }
+  }
+
+  function speakQuizText() {
+    const q = quizQuestions[quizIndex];
+    if (!q || !("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(q.en);
+    u.lang = accent; u.rate = speechSpeed;
+    speechSynthesis.speak(u);
+  }
+
+  function revealFlashcard() {
+    if (flashRevealed) return;
+    flashRevealed = true;
+    document.getElementById("flashText").textContent = quizQuestions[quizIndex].en;
+    document.getElementById("flashHint").textContent = "再點一下也可以播放英文";
+    speakQuizText();
+  }
+
+  function flashResult(correct) {
+    if (quizAnswered) return;
+    quizAnswered = true;
+    if (correct) quizCorrect++;
+    recordQuizAnswer(quizQuestions[quizIndex], correct);
+    playResultSound(correct);
+    setTimeout(nextQuizQuestion, 500);
+  }
+
+  function nextQuizQuestion() {
+    if (quizIndex < quizQuestions.length - 1) {
+      quizIndex++;
+      quizAnswered = false;
+      flashRevealed = false;
+      renderQuiz();
+    } else {
+      showToast(`🎉 完成！這次答對 ${quizCorrect} / ${quizQuestions.length} 題`);
+      setTimeout(goHome, 900);
+    }
+  }
+
+  function openReview() {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("review").classList.add("active");
+    const p = loadProgress();
+    const pool = allQuestions();
+    const list = document.getElementById("reviewList");
+    const qs = p.failed.map(id => pool.find(q => q.id === id)).filter(Boolean);
+
+    if (!qs.length) {
+      list.innerHTML = '<div class="tip">🎉 太棒了！目前沒有待複習的句子。</div>';
+    } else {
+      list.innerHTML = qs.map(q => `
+        <div class="record">
+          <span class="pill orange">需要複習</span>
+          <div style="margin-top:8px;">${q.zh}</div>
+          <div class="en">${q.en}</div>
+          <button class="secondary" onclick='speakText(${JSON.stringify(q.en)})'>🔊 聽一次</button>
+          <button class="primary" onclick='markReviewLearned(${JSON.stringify(q.id)})' style="margin-top:6px;">✅ 我會了</button>
+        </div>`).join("");
+    }
+  }
+
+  function speakText(text) {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = accent; u.rate = speechSpeed;
+    speechSynthesis.speak(u);
+  }
+
+  function markReviewLearned(id) {
+    const p = loadProgress();
+    if (!p.learned.includes(id)) p.learned.push(id);
+    p.failed = p.failed.filter(x => x !== id);
+    saveProgress(p);
+    openReview();
+    updateHomeStats();
+  }
+
+  function openStats() {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("stats").classList.add("active");
+    updateHomeStats();
+    const p = loadProgress();
+    const pool = allQuestions();
+    const records = document.getElementById("statsRecords");
+    const learned = p.learned.map(id => pool.find(q => q.id === id)).filter(Boolean).slice(-12).reverse();
+    records.innerHTML = learned.length
+      ? learned.map(q => `<div class="record"><span class="pill green">已學會</span><div style="margin-top:7px;">${q.zh}</div><div class="en">${q.en}</div></div>`).join("")
+      : '<div class="tip">完成第一句英文後，這裡會開始出現學習紀錄。</div>';
+  }
+
+  function openSettings() {
+    document.querySelectorAll(".page").forEach(x => x.classList.remove("active"));
+    document.getElementById("settingsPage").classList.add("active");
+    const s = getSettings();
+    soundEnabled = s.sound !== false;
+    autoSpeakEnabled = s.autoSpeak === true;
+    speechSpeed = Number(s.speed) || 0.8;
+    accent = s.accent || "en-US";
+    document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
+    document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
+    document.getElementById("speedSlider").value = speechSpeed;
+    document.getElementById("speedValue").textContent = speechSpeed.toFixed(1) + "x";
+    document.getElementById("accentSelect").value = accent;
+  }
+
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
+    document.getElementById("soundSwitch").classList.toggle("on", soundEnabled);
+  }
+
+  function toggleAutoSpeak() {
+    autoSpeakEnabled = !autoSpeakEnabled;
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
+    document.getElementById("autoSpeakSwitch").classList.toggle("on", autoSpeakEnabled);
+  }
+
+  function changeAccent(value) {
+    accent = value || "en-US";
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
+    showToast(accent === "en-US" ? "🇺🇸 已切換為美式英文" :
+      accent === "en-GB" ? "🇬🇧 已切換為英式英文" :
+      accent === "en-AU" ? "🇦🇺 已切換為澳洲英文" : "🇨🇦 已切換為加拿大英文");
+  }
+
+  function changeSpeechSpeed(value) {
+    speechSpeed = Number(value);
+    saveSettings({sound:soundEnabled, autoSpeak:autoSpeakEnabled, speed:speechSpeed, accent:accent});
+    const label = document.getElementById("speedValue");
+    if (label) label.textContent = speechSpeed.toFixed(1) + "x";
+  }
+
+  function resetProgress() {
+    if (confirm("確定要刪除所有學習紀錄嗎？")) {
+      localStorage.removeItem(STORAGE_KEY);
+      updateHomeStats();
+      updateLearningStatus();
+      showToast("已重設學習紀錄");
+      setTimeout(goHome, 500);
+    }
+  }
+
+  function speakEnglish() {
+    // 句子區現在包含 KK 音標與可點擊單字，
+    // 不能再直接讀取 #en 的 textContent，否則瀏覽器會把 KK 音標也拿去朗讀。
+    const q = currentQuestions[currentIndex];
+    const text = q && q.en ? q.en : "";
+    if ("speechSynthesis" in window && text) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = accent || "en-US";
+      u.rate = speechSpeed;
+      speechSynthesis.speak(u);
+    } else {
+      showToast("你的瀏覽器目前不支援英文語音播放");
+    }
+  }
+
+  let recognition = null;
+  let micPermissionState = "unknown";
+
+  function setMicUI(state, message) {
+    micPermissionState = state;
+    const status = document.getElementById("micStatus");
+    const help = document.getElementById("micHelp");
+    const button = document.getElementById("micPermissionButton");
+    if (!status) return;
+
+    status.className = "mic-status " + state;
+
+    if (state === "granted") {
+      status.textContent = "🟢 麥克風權限：已允許";
+      help.textContent = message || "已經允許麥克風。之後按「跟著說」時，不需要 App 再次要求權限。";
+      button.textContent = "🟢 麥克風已允許";
+      button.disabled = true;
+      button.style.opacity = ".65";
+    } else if (state === "denied") {
+      status.textContent = "🔴 麥克風權限：被拒絕";
+      help.textContent = message || "請到瀏覽器的網站權限設定，把本網站的「麥克風」改成允許，再回到 App。";
+      button.textContent = "⚙️ 重新檢查麥克風";
+      button.disabled = false;
+      button.style.opacity = "1";
+    } else {
+      status.textContent = "🟡 麥克風權限：尚未確認";
+      help.textContent = message || "第一次使用請按「允許麥克風」。瀏覽器會顯示一次權限詢問。";
+      button.textContent = "🎤 允許麥克風";
+      button.disabled = false;
+      button.style.opacity = "1";
+    }
+  }
+
+  async function checkMicrophonePermission() {
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const result = await navigator.permissions.query({ name: "microphone" });
+        if (result.state === "granted") {
+          localStorage.setItem("englishMicPermissionV1", "granted");
+          setMicUI("granted");
+          return "granted";
+        }
+        if (result.state === "denied") {
+          setMicUI("denied");
+          return "denied";
+        }
+      }
+    } catch (e) {
+      // Safari / iOS 可能不支援 permissions.query，改用本機記錄與 getUserMedia。
+    }
+
+    if (localStorage.getItem("englishMicPermissionV1") === "granted") {
+      setMicUI("granted");
+      return "granted";
+    }
+
+    setMicUI("unknown");
+    return "unknown";
+  }
+
+  async function requestMicrophonePermission(forceCheck = false) {
+    // 已經成功授權過，就直接使用 SpeechRecognition，不再重複呼叫權限詢問。
+    // 若使用者按「重新檢查」，才會再次確認瀏覽器的實際權限。
+    if (!forceCheck && localStorage.getItem("englishMicPermissionV1") === "granted") {
+      setMicUI("granted");
+      return true;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setMicUI("denied", "此瀏覽器沒有提供麥克風權限 API。請改用最新版 Safari 或 Chrome，並確認網址是 HTTPS。");
+      showToast("請使用 HTTPS 網站與最新版瀏覽器");
+      return false;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+
+      localStorage.setItem("englishMicPermissionV1", "granted");
+      setMicUI("granted");
+      showToast("🟢 麥克風已允許，之後不會重複要求");
+      return true;
+    } catch (error) {
+      localStorage.removeItem("englishMicPermissionV1");
+
+      if (error && (error.name === "NotAllowedError" || error.name === "SecurityError")) {
+        setMicUI("denied", "如果你之前按過「不允許」，請到瀏覽器的網站設定，把本網站的「麥克風」改為「允許」，再回來按一次。");
+        showToast("🔴 麥克風未允許，請到網站設定開啟");
+      } else {
+        setMicUI("unknown", "目前無法取得麥克風。請確認裝置有麥克風、網站使用 HTTPS，並再試一次。");
+        showToast("無法取得麥克風，請再試一次");
+      }
+      return false;
+    }
+  }
+
+  async function practiceSpeaking() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      showToast("目前瀏覽器不支援語音辨識，請用 Chrome 試試看");
+      return;
+    }
+
+    const permission = await requestMicrophonePermission(false);
+    if (!permission) return;
+
+    recognition = new SpeechRecognition();
+    recognition.lang = accent || "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    showToast("🎤 請開始說英文……");
+
+    recognition.onresult = function(event) {
+      const heard = event.results[0][0].transcript.trim();
+      const target = document.getElementById("en").textContent.trim();
+      const normalizedHeard = heard.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ");
+      const normalizedTarget = target.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ");
+
+      document.getElementById("speechResult").textContent = `你說：「${heard}」`;
+
+      if (normalizedHeard === normalizedTarget) {
+        document.getElementById("speechFeedback").textContent = "🟢 太棒了！說得很完整！";
+        markCurrent(true);
+      } else {
+        document.getElementById("speechFeedback").textContent =
+          `🟡 很接近！目標句子是：「${target}」`;
+        markCurrent(false);
+      }
+    };
+
+    recognition.onerror = function(event) {
+      if (event && (event.error === "not-allowed" || event.error === "service-not-allowed")) {
+        localStorage.removeItem("englishMicPermissionV1");
+        setMicUI("denied", "瀏覽器拒絕了麥克風。請在網站權限中把「麥克風」改為允許，再回到 App。");
+        showToast("🔴 麥克風權限被拒絕");
+      } else {
+        showToast("沒有聽清楚，再試一次！");
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      showToast("語音練習正在啟動，請稍候再試");
+    }
+  }
+
+  // 讀取設定並建立今天的 5 題題單。
+  const initialSettings = getSettings();
+  soundEnabled = initialSettings.sound !== false;
+  autoSpeakEnabled = initialSettings.autoSpeak === true;
+  speechSpeed = Number(initialSettings.speed) || 0.8;
+  accent = initialSettings.accent || "en-US";
+  getDailyQuestions();
+  updateLearningStatus();
+  checkMicrophonePermission();
+  updateHomeStats();
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") closeWordPopup();
+  });
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+  }
+</script>
+</body>
+</html>
